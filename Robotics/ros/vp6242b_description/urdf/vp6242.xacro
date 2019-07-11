@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="vp6242">
+  <xacro:property name="deg2rad" value="${pi/180}"/>
+  <xacro:property name="rad2deg" value="${180/pi}"/>
+
+  <!-- Links -->
+  <link name="map"/>
+  <link name="base_org"/>
+  <link name="link1_org"/>
+  <link name="link2_org"/>
+  <link name="link3_org"/>
+  <link name="link4_org"/>
+  <link name="wrist1_org"/>
+  <link name="wrist2_org"/>
+  <link name="tool_org"/>
+
+  <!-- Properties -->
+  <xacro:property name="default_joint_velocity" value="0.8" />
+  <xacro:property name="default_joint_effort" value="25000" />
+  <xacro:property name="joint1_min" value="${-160*deg2rad}" />
+  <xacro:property name="joint1_max" value="${160*deg2rad}" />
+  <xacro:property name="joint2_min" value="${-120*deg2rad}" />
+  <xacro:property name="joint2_max" value="${120*deg2rad}" />
+  <xacro:property name="joint3_min" value="${-160*deg2rad}" />
+  <xacro:property name="joint3_max" value="${-19*deg2rad}" />
+  <xacro:property name="joint4_min" value="${-160*deg2rad}" />
+  <xacro:property name="joint4_max" value="${160*deg2rad}" />
+  <xacro:property name="joint5_min" value="${-120*deg2rad}" />
+  <xacro:property name="joint5_max" value="${120*deg2rad}" />
+  <xacro:property name="joint6_min" value="${-360*deg2rad}" />
+  <xacro:property name="joint6_max" value="${360*deg2rad}" />
+
+  <!--  Joints -->
+  <joint name="fixed" type="fixed">
+    <parent link="map"/>
+    <child link="base_org"/>
+    <origin xyz="0 0 1" rpy="0 0 0"/>
+  </joint>
+  <joint name="joint1" type="revolute">
+    <parent link="base_org"/>
+    <child link="link1_org"/>
+    <origin xyz="0 0 0.155"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="25000" lower="${joint1_min}" upper="${joint1_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint2" type="revolute">
+    <parent link="link1_org"/>
+    <child link="link2_org"/>
+    <axis xyz="0 0 1"/>
+    <origin  rpy="${pi/2} 0 0" xyz="0 0 0.125"/>
+    <limit effort="25000" lower="${joint2_min}" upper="${joint2_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint3" type="revolute">
+    <parent link="link2_org"/>
+    <child link="link3_org"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 ${pi/2}" xyz="0 0.210 0"/>
+    <limit effort="25000" lower="${joint3_min}" upper="${joint3_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint4" type="revolute">
+    <parent link="link3_org"/>
+    <child link="link4_org"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="${-pi/2} 0 ${-pi/2}" xyz="0 0.075 0"/>
+    <limit effort="25000" lower="${joint4_min}" upper="${joint4_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint5" type="revolute">
+    <parent link="link4_org"/>
+    <child link="wrist1_org"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="${pi/2} 0 0" xyz="0 0 0.210"/>
+    <limit effort="25000" lower="${joint5_min}" upper="${joint5_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint6" type="revolute">
+    <parent link="wrist1_org"/>
+    <child link="wrist2_org"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="${-pi/2} 0 0" xyz="0 0 0"/>
+    <limit effort="25000" lower="${joint6_min}" upper="${joint6_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="fixed_tool" type="fixed">
+    <parent link="wrist2_org"/>
+    <child link="tool_org"/>
+    <origin xyz="0 0 0.070"/>
+  </joint>
+</robot>
