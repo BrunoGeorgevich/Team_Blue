@@ -21,6 +21,14 @@ dist_coeffs = calibrationParams.getNode("distCoeffs").mat()
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 markerLength = 0.09
 
+def HSV_color_thresholding(image, min_val_hsv, max_val_hsv):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, min_val_hsv, max_val_hsv)
+    imask = mask > 0
+    extracted = np.zeros_like(image, image.dtype)
+    extracted[imask] = image[imask]
+    return extracted
+
 def detect_aruco(frame):
     frame = frame.copy()
     aruco_dict = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
@@ -85,12 +93,59 @@ def draw_dots(frame):
                [(256,300), (420,300), (588,300)],
                [(256,416), (420,416), (588,416)]]
 
+    i = 0
+    j = 1
     for row in centers:
         for cell in row:
             p1, p2 = dot(cell,3)
-            frame = cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
+            if i == 0:
+                frame = cv2.rectangle(frame, p1, p2, (255, 0, 0), 5*j)
+            elif i == 1:
+                frame = cv2.rectangle(frame, p1, p2, (0, 255, 0), 5*j)
+            elif i == 2:
+                frame = cv2.rectangle(frame, p1, p2, (0, 0, 255), 5*j)
+            j += 1
+        i += 1
+        j = 1
     return frame
 
+def retrieve_central_dots(frame):
+    frame = frame.copy()
+
+    rows = [
+            HSV_color_thresholding(frame, (74,126,180), (136,255,255)),
+            HSV_color_thresholding(frame, (46,49,0), (77,255,255)),
+            HSV_color_thresholding(frame, (0,93,0), (29,255,255))
+            ]
+
+    dots = []
+
+    for row in rows:
+        gray = cv2.cvtColor(row, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+        
+        cnts,_ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+        aux_dots = []
+    
+        frame_area = gray.shape[0] * gray.shape[1]
+    
+        for c in cnts:
+    
+            cnt_area = cv2.contourArea(c)
+            if cnt_area < 0.000001*frame_area:
+                continue
+    
+            x,y,w,h = cv2.boundingRect(c)
+            aux_dots.append((x,y,w,h,cnt_area))
+    
+        aux_dots.sort(key=lambda tup: tup[4])
+        aux_dots = list(map(lambda tup: (tup[0], tup[1]), aux_dots))
+        dots.append(aux_dots)
+
+    frame = cv2.rectangle(frame, (dots[0][0][0], dots[0][0][1]), (dots[0][0][0] + 7, dots[0][0][1] + 7), (255,0,255), 7)
+
+    return frame, dots
 
 reference = cv2.imread("assets/reference.png")
 
@@ -136,6 +191,7 @@ while cv2.waitKey(1) != ord("q"):
     
             rows,cols,ch = distorced.shape
             distorced_reverse_warped = cv2.warpPerspective(distorced_warped,M,(cols,rows))
+            distorced_reverse_warped, dots = retrieve_central_dots(distorced_reverse_warped)
             cv2.imshow("Reverse Warped", distorced_reverse_warped)
 
     cv2.imshow("Reference", draw_dots(reference))
