@@ -8,7 +8,6 @@ from random import randint
 def run_node():
     NODE_NAME = 'random_board_state_sender'
     TOPIC_NAME = 'board_state'
-    BOARD =  np.empty((3, 3), dtype=object)
     RATE = 0.2
 
     # Init node

@@ -277,6 +277,8 @@ class DensoInterface:
                 Color of the mesh in the sequence [Alpha, Red, Green, Blue].
 
         """    
+        # Remove if already exists
+        self.remove_object_from_scene(mesh_name)
         # First, get the full path from package
         full_mesh_path = self.rospack.get_path(mesh_package_name) + relative_path
         # MoveIT uses PoseStamped in order to publish 
@@ -348,6 +350,7 @@ class DensoInterface:
         mesh.color.r = mesh_color[1]
         mesh.color.g = mesh_color[2]
         mesh.color.b = mesh_color[3]
+        mesh.lifetime = rospy.Duration(1)
         self.marker_array.markers.append(mesh)
     
     def add_tf_to_scene(self, tf_name, parent_link_name, tf_position, tf_orientation=[0,0,0,1]):
@@ -377,6 +380,28 @@ class DensoInterface:
         }
         print('[SCRIPT] Added tf {} to scene'.format(tf_name))
 
+    def remove_object_from_scene(self, obj_name):
+        """
+
+        Remove a box or a mesh from scene.
+
+        @params
+            obj_name: String
+                Name of object to be removed.
+
+        """
+        # Delete from TFs
+        if (obj_name in self.scene_objs.keys()):
+            del self.scene_objs[obj_name]
+        # Delete from scene collision
+        scene_objects = self.scene.get_known_object_names()
+        if (obj_name in scene_objects):
+            self.scene.remove_world_object(obj_name)
+        # Search for names in marker_array
+        for marker in filter(lambda x: (x.text == obj_name), self.marker_array.markers):
+            self.marker_array.markers.remove(marker)
+        
+
     def broadcast_tfs(self):
         """
 
@@ -405,7 +430,8 @@ class DensoInterface:
                 self.marker_array.markers[i].pose.orientation = self.scene_objs[marker_name]['orientation']
                 self.marker_array.markers[i].header.stamp = self.now
                 self.marker_array.markers[i].header.frame_id = self.scene_objs[marker_name]['parent_link']
-            self.marker_array_pub.publish( self.marker_array )
+   
+        self.marker_array_pub.publish( self.marker_array )
 
     def get_tf_transform(self, frame_name, frame_reference_name=None):
         """
