@@ -9,7 +9,8 @@ Created on Fri Jul 12 16:25:14 2019
 import cv2
 import cv2.aruco as aruco
 
-from skimage.morphology import reconstruction
+import tensorflow as tf
+from object_detection.utils import label_map_util
 
 import numpy as np
 
@@ -17,6 +18,16 @@ calibrationFile = "calibration_rgb.yml"
 calibrationParams = cv2.FileStorage(calibrationFile, cv2.FILE_STORAGE_READ)
 camera_matrix = calibrationParams.getNode("camera_matrix").mat()
 dist_coeffs = calibrationParams.getNode("distCoeffs").mat()
+
+H = 116
+W = 164
+CENTERS = [[(256,184), (420,184), (584,184)],
+           [(256,300), (420,300), (584,300)],
+           [(256,416), (420,416), (584,416)]]
+
+PATH_TO_CKPT = 'graph.pb'
+PATH_TO_LABELS = 'labelmap.pbtxt'
+NUM_CLASSES = 2
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 markerLength = 0.09
@@ -88,14 +99,12 @@ def dot(tup, space = 1):
     return (x - space, y - space), (x + space, y + space)
 
 def draw_dots(frame):
+    global CENTERS
     frame = frame.copy()
-    centers = [[(256,184), (420,184), (588,184)],
-               [(256,300), (420,300), (588,300)],
-               [(256,416), (420,416), (588,416)]]
 
     i = 0
     j = 1
-    for row in centers:
+    for row in CENTERS:
         for cell in row:
             p1, p2 = dot(cell,3)
             if i == 0:
@@ -147,6 +156,80 @@ def retrieve_central_dots(frame):
 
     return frame, dots
 
+def retrieve_cells(distorced_warped):
+    global W, H, CENTERS
+
+    cells = {}
+
+    idx = 1
+    for row in CENTERS:
+        for cell in row:
+            x1, x2 = (-W/2 + cell[0], W/2 + cell[0])
+            y1, y2 = (-H/2 + cell[1], H/2 + cell[1])
+            cells[idx] = distorced_warped[int(y1):int(y2), int(x1):int(x2)]
+            idx += 1
+
+    return cells
+
+def predict(image):
+    global sess
+    image_expanded = np.expand_dims(image, axis=0)
+
+    (boxes, scores, classes, num) = sess.run(
+        [detection_boxes, detection_scores, detection_classes, num_detections],
+        feed_dict={image_tensor: image_expanded})
+    
+    predictions = list(zip(np.squeeze(boxes),
+    	 np.squeeze(classes).astype(np.int32),
+    	 np.squeeze(scores)))
+    
+    predictions.sort(key=lambda it: it[2], reverse=True)
+    return predictions[0]
+
+def draw_prediction(image, prediction):
+    global category_index
+
+    image = image.copy()
+    if len(image.shape) == 2:
+        h, w = image.shape
+    elif len(image.shape) == 3:
+        h,w,d = image.shape
+    
+    x1,y1,x2,y2 = prediction[0] * [w,h,w,h]
+
+    score = prediction[2]
+    class_name = category_index[prediction[1]]['name']
+
+    if score < 0.99:
+        class_name = "-"
+
+    cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 5)
+    cv2.putText(image, f"{class_name} | {score:.2f}", (int((x2 - x1)/6), int((y2 - y1)/6)), cv2.FONT_HERSHEY_SIMPLEX, int(h*0.009),(0,200,0), int(w*0.009))
+    return image
+
+def current_board_state(cells):
+    board = '''
+        | 1 | 2 | 3 |
+        | 4 | 5 | 6 |
+        | 7 | 8 | 9 |
+    '''
+
+    for k in cells.keys():
+        cell = cells[k]
+        prediction = predict(cell)
+
+        score = prediction[2]
+        class_name = category_index[prediction[1]]['name']
+    
+        if score < 0.975:
+            class_name = " "
+
+        board = board.replace(f'{k}', class_name)
+
+    print(board)
+
+
+
 reference = cv2.imread("assets/reference.png")
 
 reference_aruco, reference_tags = detect_aruco(reference)
@@ -162,6 +245,26 @@ cv2.namedWindow("Reference", cv2.WINDOW_KEEPRATIO)
 cv2.namedWindow("Distorced", cv2.WINDOW_KEEPRATIO)
 cv2.namedWindow("Distorced Warped", cv2.WINDOW_KEEPRATIO)
 cv2.namedWindow("Reverse Warped", cv2.WINDOW_KEEPRATIO)
+
+label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
+categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
+category_index = label_map_util.create_category_index(categories)
+
+detection_graph = tf.Graph()
+with detection_graph.as_default():
+    od_graph_def = tf.GraphDef()
+    with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
+        serialized_graph = fid.read()
+        od_graph_def.ParseFromString(serialized_graph)
+        tf.import_graph_def(od_graph_def, name='')
+
+    sess = tf.Session(graph=detection_graph)
+
+image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
+detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
+num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
 cap = cv2.VideoCapture(0)
 
@@ -184,13 +287,17 @@ while cv2.waitKey(1) != ord("q"):
             M = cv2.getPerspectiveTransform(distorced_pts,reference_pts)
             
             rows,cols,ch = reference.shape
-            distorced_warped = draw_dots(cv2.warpPerspective(distorced,M,(cols,rows)))
+            distorced_warped = cv2.warpPerspective(distorced,M,(cols,rows))
+            distorced_warped_dotted = draw_dots(distorced_warped)
             cv2.imshow("Distorced Warped", distorced_warped)
+
+            cells = retrieve_cells(distorced_warped)
+            current_board_state(cells)
             
             M = cv2.getPerspectiveTransform(reference_pts, distorced_pts)
     
             rows,cols,ch = distorced.shape
-            distorced_reverse_warped = cv2.warpPerspective(distorced_warped,M,(cols,rows))
+            distorced_reverse_warped = cv2.warpPerspective(distorced_warped_dotted,M,(cols,rows))
             distorced_reverse_warped, dots = retrieve_central_dots(distorced_reverse_warped)
             cv2.imshow("Reverse Warped", distorced_reverse_warped)
 
