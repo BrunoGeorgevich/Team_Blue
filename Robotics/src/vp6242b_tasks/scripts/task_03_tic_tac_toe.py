@@ -4,6 +4,7 @@ import tf
 import numpy as np
 from densointerface import DensoInterface
 from geometry_msgs.msg import Quaternion, Point
+from std_msgs.msg import Int8MultiArray, MultiArrayDimension
 
 def run_node():
     #  Definitions
@@ -12,6 +13,7 @@ def run_node():
     OPEN_GRIPPER_JOINT = 0.0
     CLOSE_GRIPPER_JOINT = 0.6
     GRIPPER_IS_CLOSED = False
+    LAST_BOARD_STATE =  np.empty((3, 3), dtype=object)
 
     # Init node
     rospy.init_node(NODE_NAME)
@@ -35,6 +37,11 @@ def run_node():
     # Attach pen to end effector and close the gripper
     interface.attach_mesh('gripper_pen')
     interface.update_gripper(CLOSE_GRIPPER_JOINT, wait=True)
+
+    # Create board state listener and store last board state read
+    def board_state_cb(multiarray_data):
+        LAST_BOARD_STATE = np.array(multiarray_data.data).reshape((3, 3))
+    rospy.Subscriber('board_state', Int8MultiArray, board_state_cb)
 
     # Main loop
     while(not rospy.is_shutdown()):
