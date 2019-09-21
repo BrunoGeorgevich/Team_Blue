@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="vp6242_robotiq85">
+
+	<!-- THE ROBOT -->
+	<link name="world" />
+
+	<!-- Arm file -->
+	<xacro:include filename="$(find vp6242b_description)/urdf/vp6242.urdf.xacro" />
+	<joint name="world_joint" type="fixed">
+		<parent link="world" />
+		<child link = "base_org" />
+		<origin xyz="0.0 0.0 1.03" rpy="0.0 0.0 0.0" />
+	</joint>
+
+	<!-- Robotiq from Beta Robots fork-->
+	<xacro:include filename="$(find robotiq_2f_model)/model/robotiq_2f_85.urdf.xacro" />
+	<xacro:robotiq_2f_85 name="simple_gripper" parent="link_6" precise_collision="false" adaptive_transmission="false">
+		<origin xyz="0 0 0" rpy="0 0 1.5708" />
+	</xacro:robotiq_2f_85>
+
+	<!-- ============================= -->
+	<!-- ====== Gazebo Plugins ======= -->
+	<!-- ============================= -->
+	<gazebo>
+		<plugin name="control" filename="libgazebo_ros_control.so" />
+	</gazebo>
+</robot>

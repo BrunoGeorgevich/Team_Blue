@@ -1,0 +1,337 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="vp6242b">
+  <!-- General properties -->
+  <xacro:property name="deg2rad" value="${pi/180}"/>
+  <xacro:property name="rad2deg" value="${180/pi}"/>
+  <xacro:property name="mesh_path" value="package://vp6242b_description/meshes" />
+
+  <!-- Joint properties -->
+  <xacro:property name="default_joint_velocity" value="0.8" />
+  <xacro:property name="default_joint_effort" value="10e3" />
+  <xacro:property name="default_joint_damping" value="0.5" />
+  <xacro:property name="default_joint_friction" value="0.06" />
+  
+  <xacro:property name="joint_1_min" value="${-90.0*deg2rad}" />
+  <xacro:property name="joint_1_max" value="${90.0*deg2rad}" />
+  <xacro:property name="joint_2_min" value="${-120.0*deg2rad}" />
+  <xacro:property name="joint_2_max" value="${120.0*deg2rad}" />
+  <xacro:property name="joint_3_min" value="${-160.0*deg2rad}" />
+  <xacro:property name="joint_3_max" value="${1*deg2rad}" />
+  <xacro:property name="joint_4_min" value="${-89.0*deg2rad}" />
+  <xacro:property name="joint_4_max" value="${89.0*deg2rad}" />
+  <xacro:property name="joint_5_min" value="${-120.0*deg2rad}" />
+  <xacro:property name="joint_5_max" value="${120.0*deg2rad}" />
+  <xacro:property name="joint_6_min" value="${-160.0*deg2rad}" />
+  <xacro:property name="joint_6_max" value="${160.0*deg2rad}" />
+
+  <!-- Some Userful Interial Macros -->
+  <!-- Ref: https://github.com/uos/uos_tools/blob/fuerte/uos_common_urdf/common.xacro -->
+  <xacro:macro name="box_inertial_with_origin" params="x y z mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <insert_block name="origin"/>
+      <inertia ixx="${0.0833333 * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${0.0833333 * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${0.0833333 * mass * (x*x + y*y)}" />
+    </inertial>
+  </xacro:macro>
+  <xacro:macro name="sphere_inertial_with_origin" params="radius mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <insert_block name="origin" />
+      <inertia ixx="${0.4 * mass * radius * radius}" ixy="0.0" ixz="0.0"
+        iyy="${0.4 * mass * radius * radius}" iyz="0.0"
+        izz="${0.4 * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+  <xacro:macro name="cylinder_inertial_with_origin" params="radius length mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <insert_block name="origin" />
+      <inertia ixx="${0.0833333 * mass * (3 * radius * radius + length * length)}" ixy="0.0" ixz="0.0"
+        iyy="${0.0833333 * mass * (3 * radius * radius + length * length)}" iyz="0.0"
+        izz="${0.5 * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+
+  <!-- ============================= -->
+  <!-- ========== Links =========== -->
+  <!-- ============================= -->
+  <link name="base_org"/>
+  <!-- ============================= -->
+  <link name="base_link">
+    <visual>
+       <geometry>
+          <mesh filename="${mesh_path}/visual/base.dae"/>
+       </geometry>
+    </visual>
+    <collision>
+       <geometry>
+          <mesh filename="${mesh_path}/collision/base.dae"/>
+       </geometry>
+    </collision>
+    <xacro:box_inertial_with_origin x="0.2" y="0.155" z="0.155" mass="5">
+      <origin xyz="-0.034692 -0.000668 -0.075958"/>
+    </xacro:box_inertial_with_origin>
+  </link>
+  <link name="base_link_aux"/>
+  <!-- ============================= -->
+  <link name="link_1">
+    <visual>
+      <geometry>
+         <mesh filename="${mesh_path}/visual/link1.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_path}/collision/link1.dae"/>
+      </geometry>
+    </collision>
+    <xacro:cylinder_inertial_with_origin radius="0.08" length="0.1" mass="4">
+      <origin xyz="-0.000004 -0.059714 -0.000001"/>
+    </xacro:cylinder_inertial_with_origin>
+  </link>
+  <link name="link_1_aux"/>
+  <!-- ============================= -->
+  <link name="link_2">
+    <visual>
+      <geometry>
+         <mesh filename="${mesh_path}/visual/link2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+       <geometry>
+          <mesh filename="${mesh_path}/collision/link2.dae"/>
+       </geometry>
+    </collision>
+    <xacro:box_inertial_with_origin x="0.180" y="0.08" z="0.08" mass="2">
+      <origin xyz="-0.133202 -0.003108 -0.000139"/>
+    </xacro:box_inertial_with_origin>
+  </link>
+  <link name="link_2_aux"/>
+  <!-- ============================= -->
+  <link name="link_3">
+    <visual>
+      <geometry>
+          <mesh filename="${mesh_path}/visual/link3.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+        <geometry>
+          <mesh filename="${mesh_path}/collision/link3.dae"/>
+        </geometry>
+    </collision>
+    <xacro:box_inertial_with_origin x="0.06" y="0.06" z="0.180" mass="2">
+      <origin xyz="0 0 0"/>
+    </xacro:box_inertial_with_origin>
+  </link>
+  <link name="link_3_aux"/>
+  <!-- ============================= -->
+  <link name="link_4">
+    <visual>
+      <geometry>
+          <mesh filename="${mesh_path}/visual/link4.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+        <geometry>
+          <mesh filename="${mesh_path}/collision/link4.dae"/>
+        </geometry>
+    </collision>
+    <xacro:box_inertial_with_origin x="0.06" y="0.210" z="0.06" mass="2">
+      <origin xyz="0 0 0"/>
+    </xacro:box_inertial_with_origin>
+  </link>
+  <link name="link_4_aux"/>
+  <!-- ============================= -->
+  <link name="link_5">
+    <visual>
+      <geometry>
+         <mesh filename="${mesh_path}/visual/link5.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+       <geometry>
+          <mesh filename="${mesh_path}/collision/link5.dae"/>
+       </geometry>
+    </collision>
+    <xacro:sphere_inertial_with_origin radius="0.03" mass="0.5">
+      <origin xyz="0 0 0"/>
+    </xacro:sphere_inertial_with_origin>
+  </link>
+  <link name="link_5_aux"/>
+  <!-- ============================= -->
+  <link name="link_6">
+    <visual>
+      <geometry>
+         <mesh filename="${mesh_path}/visual/wrist.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+       <geometry>
+          <mesh filename="${mesh_path}/collision/wrist.dae"/>
+       </geometry>
+    </collision>
+    <xacro:cylinder_inertial_with_origin radius="0.04" length="0.08" mass="1.0">
+      <origin xyz="0 0 0"/>
+    </xacro:cylinder_inertial_with_origin>
+  </link>
+
+  <!-- ============================= -->
+  <!-- ========== Joints =========== -->
+  <!-- ============================= -->
+  <joint name="base_org_to_base" type="fixed">
+    <parent link="base_org"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.155" rpy="0 0 0"/>
+  </joint>
+  <!-- ============================= -->
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="base_link_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_1_min}" upper="${joint_1_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_1_aux" type="fixed">
+    <parent link="base_link_aux"/>
+    <child link="link_1"/>
+    <origin xyz="0 0 0.125" rpy="${pi/2} 0 0"/>
+  </joint>
+  <!-- ============================= -->
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_1_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_2_min}" upper="${joint_2_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_2_aux" type="fixed">
+    <parent link="link_1_aux"/>
+    <child link="link_2"/>
+    <origin xyz="0.210 0 0" rpy="0 0 0"/>
+  </joint>
+  <!-- ============================= -->
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_2_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_3_min}" upper="${joint_3_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_3_aux" type="fixed">
+    <parent link="link_2_aux"/>
+    <child link="link_3"/>
+    <origin xyz="-0.075 0 0" rpy="${-pi/2} 0 0"/>
+  </joint>
+  <!-- ============================= -->
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_3_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.210" rpy="0 0 0"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_4_min}" upper="${joint_4_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_4_aux" type="fixed">
+    <parent link="link_3_aux"/>
+    <child link="link_4"/>
+    <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+  </joint>
+  <!-- ============================= -->
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_4_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_5_min}" upper="${joint_5_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_5_aux" type="fixed">
+    <parent link="link_4_aux"/>
+    <child link="link_5"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 0"/>
+  </joint> -->
+  <!-- ============================= -->
+  <joint name="joint_6" type="revolute">
+    <parent link="link_5"/>
+    <child link="link_5_aux"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.07" rpy="0 0 0"/>
+    <dynamics damping="${default_joint_damping}" friction="${default_joint_friction}"/>
+    <limit effort="${default_joint_effort}" lower="${joint_6_min}" upper="${joint_6_max}" velocity="${default_joint_velocity}"/>
+  </joint>
+  <joint name="joint_6_aux" type="fixed">
+    <parent link="link_5_aux"/>
+    <child link="link_6"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================= -->
+  <!-- ======= Transmission -======= -->
+  <!-- ============================= -->
+  <transmission name="tran_1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran_2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran_3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran_4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_4">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_4">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+    <transmission name="tran_5">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_5">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_5">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran_6">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint_6">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_6">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+</robot>

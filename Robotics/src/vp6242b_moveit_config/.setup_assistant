@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: vp6242b_description
+    relative_path: urdf/vp6242_robotiq85_robot.xacro
+    xacro_args: ""
+  SRDF:
+    relative_path: config/vp6242_robotiq85.srdf
+  CONFIG:
+    author_name: Bruno Lima
+    author_email: bgcl@ic.ufal.br
+    generated_timestamp: 1567080919

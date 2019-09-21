@@ -1,0 +1,12 @@
+<launch>
+  <arg name="file" default="$(find vp6242b_description)/urdf/vp6242.urdf.xacro"/>
+
+  <param name="robot_description"
+    command="$(find xacro)/xacro '$(find vp6242b_description)/$(arg file)'" />
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="TRUE"/>
+  </node>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vp6242b_description)/launch/vp6242.rviz"/>
+</launch>

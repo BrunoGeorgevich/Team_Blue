@@ -1,0 +1,454 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 84
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Status1
+        - /MotionPlanning1/Scene Robot1
+        - /MotionPlanning1/Planning Request1
+        - /TF1
+        - /TF1/Frames1
+        - /MarkerArray1
+      Splitter Ratio: 0.5124183297157288
+    Tree Height: 788
+  - Class: rviz/Help
+    Name: Help
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Acceleration_Scaling_Factor: 0.98
+      Class: moveit_rviz_plugin/MotionPlanning
+      Enabled: false
+      Move Group Namespace: ""
+      MoveIt_Allow_Approximate_IK: false
+      MoveIt_Allow_External_Program: false
+      MoveIt_Allow_Replanning: false
+      MoveIt_Allow_Sensor_Positioning: false
+      MoveIt_Goal_Tolerance: 0
+      MoveIt_Planning_Attempts: 10
+      MoveIt_Planning_Time: 5
+      MoveIt_Use_Cartesian_Path: false
+      MoveIt_Use_Constraint_Aware_IK: true
+      MoveIt_Warehouse_Host: 127.0.0.1
+      MoveIt_Warehouse_Port: 33829
+      MoveIt_Workspace:
+        Center:
+          X: 0
+          Y: 0
+          Z: 0
+        Size:
+          X: 2
+          Y: 2
+          Z: 2
+      Name: MotionPlanning
+      Planned Path:
+        Color Enabled: false
+        Interrupt Display: false
+        Links:
+          All Links Enabled: true
+          Expand Joint Details: false
+          Expand Link Details: false
+          Expand Tree: false
+          Link Tree Style: Links in Alphabetic Order
+        Loop Animation: false
+        Robot Alpha: 0.5
+        Robot Color: 150; 50; 150
+        Show Robot Collision: false
+        Show Robot Visual: false
+        Show Trail: false
+        State Display Time: 0.05 s
+        Trail Step Size: 1
+        Trajectory Topic: move_group/display_planned_path
+      Planning Metrics:
+        Payload: 1
+        Show Joint Torques: false
+        Show Manipulability: false
+        Show Manipulability Index: false
+        Show Weight Limit: false
+        TextHeight: 0.07999999821186066
+      Planning Request:
+        Colliding Link Color: 255; 0; 0
+        Goal State Alpha: 1
+        Goal State Color: 250; 128; 0
+        Interactive Marker Size: 0
+        Joint Violation Color: 255; 0; 255
+        Planning Group: arm_group
+        Query Goal State: false
+        Query Start State: false
+        Show Workspace: false
+        Start State Alpha: 1
+        Start State Color: 0; 255; 0
+      Planning Scene Topic: move_group/monitored_planning_scene
+      Robot Description: robot_description
+      Scene Geometry:
+        Scene Alpha: 1
+        Scene Color: 50; 230; 50
+        Scene Display Time: 0.0010000000474974513
+        Show Scene Geometry: true
+        Voxel Coloring: Z-Axis
+        Voxel Rendering: Occupied Voxels
+      Scene Robot:
+        Attached Body Color: 150; 50; 150
+        Links:
+          All Links Enabled: true
+          Expand Joint Details: false
+          Expand Link Details: false
+          Expand Tree: false
+          Link Tree Style: Links in Alphabetic Order
+        Robot Alpha: 1
+        Show Robot Collision: false
+        Show Robot Visual: true
+      Value: false
+      Velocity_Scaling_Factor: 1
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_link:
+          Value: true
+        base_link_aux:
+          Value: false
+        base_org:
+          Value: true
+        board_marks:
+          Value: true
+        gripper_pen:
+          Value: false
+        link_1:
+          Value: true
+        link_1_aux:
+          Value: false
+        link_2:
+          Value: true
+        link_2_aux:
+          Value: false
+        link_3:
+          Value: true
+        link_3_aux:
+          Value: false
+        link_4:
+          Value: true
+        link_4_aux:
+          Value: false
+        link_5:
+          Value: true
+        link_5_aux:
+          Value: false
+        link_6:
+          Value: false
+        pens:
+          Value: false
+        pens_caps:
+          Value: false
+        simple_gripper_base:
+          Value: true
+        simple_gripper_left_coupler:
+          Value: false
+        simple_gripper_left_driver:
+          Value: false
+        simple_gripper_left_follower:
+          Value: false
+        simple_gripper_left_pad:
+          Value: false
+        simple_gripper_left_spring_link:
+          Value: false
+        simple_gripper_right_coupler:
+          Value: false
+        simple_gripper_right_driver:
+          Value: false
+        simple_gripper_right_follower:
+          Value: false
+        simple_gripper_right_pad:
+          Value: false
+        simple_gripper_right_spring_link:
+          Value: false
+        table:
+          Value: false
+        tool_center:
+          Value: false
+        white_board:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 0.5
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          base_org:
+            base_link:
+              base_link_aux:
+                link_1:
+                  link_1_aux:
+                    link_2:
+                      link_2_aux:
+                        link_3:
+                          link_3_aux:
+                            link_4:
+                              link_4_aux:
+                                link_5:
+                                  link_5_aux:
+                                    link_6:
+                                      simple_gripper_base:
+                                        simple_gripper_left_driver:
+                                          simple_gripper_left_coupler:
+                                            simple_gripper_left_follower:
+                                              simple_gripper_left_pad:
+                                                {}
+                                        simple_gripper_left_spring_link:
+                                          {}
+                                        simple_gripper_right_driver:
+                                          simple_gripper_right_coupler:
+                                            simple_gripper_right_follower:
+                                              simple_gripper_right_pad:
+                                                {}
+                                        simple_gripper_right_spring_link:
+                                          {}
+                                        tool_center:
+                                          {}
+            board_marks:
+              {}
+            gripper_pen:
+              {}
+            pens:
+              {}
+            pens_caps:
+              {}
+            white_board:
+              {}
+          table:
+            {}
+      Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_org:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_1_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_2_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_3_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_4_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_5_aux:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link_6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_left_coupler:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_left_driver:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_left_follower:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_left_pad:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_left_spring_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_right_coupler:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_right_driver:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_right_follower:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_right_pad:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        simple_gripper_right_spring_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: visualization_marker_array
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz/XYOrbit
+      Distance: 2.887131452560425
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: -0.8914402723312378
+        Y: -0.5126174688339233
+        Z: -3.3031810744432732e-6
+      Focal Shape Fixed Size: false
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.5203996896743774
+      Target Frame: world
+      Value: XYOrbit (rviz)
+      Yaw: 0.45856642723083496
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1023
+  Help:
+    collapsed: false
+  Hide Left Dock: false
+  Hide Right Dock: false
+  MotionPlanning:
+    collapsed: false
+  MotionPlanning - Trajectory Slider:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f0000003a5fc0200000007fb000000100044006900730070006c006100790073010000003d000003a5000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067000000023a000001aa0000019b00ffffff0000030a000003a500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Views:
+    collapsed: false
+  Width: 1280
+  X: 640
+  Y: 27
