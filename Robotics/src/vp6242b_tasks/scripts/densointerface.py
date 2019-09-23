@@ -21,7 +21,6 @@ class DensoInterface:
     
     def _init_config(self, rate, debug):
         """
-
         General configuration for ROS interfaces.
 
         @params
@@ -29,7 +28,6 @@ class DensoInterface:
                 Frequency in hertz for class update.
             debug: Boolean
                 Configures whether debug messages should be printed.
-
         """
         self.debug = debug
         self.rate = rospy.Rate(rate)
@@ -44,13 +42,11 @@ class DensoInterface:
         
     def _init_robot(self, group_name):
         """
-
         General robot configuration. Planning constraints and robot starting pose can be set here.
         
         @params
             group_name: String
                 Name of the RViz move group to be considered. For now, there is only 'arm_group'.
-
         """
         self.robot = moveit_commander.RobotCommander()
         self.gripper_group = moveit_commander.MoveGroupCommander('gripper_group')
@@ -62,8 +58,9 @@ class DensoInterface:
         self.gripper_group.set_pose_reference_frame('simple_gripper_base')
         self.gripper_group.set_planner_id("BFMT")
         self.group = moveit_commander.MoveGroupCommander(group_name)
-        self.group.set_planning_time(5)
-        self.group.set_goal_position_tolerance(0.001)
+        self.group.set_planning_time(15)
+        self.group.set_goal_position_tolerance(0.002)
+        self.group.set_goal_orientation_tolerance(0.05)
         self.group.set_max_acceleration_scaling_factor = 1.0
         self.group.set_max_velocity_scaling_factor = 1.0
         self.group.set_pose_reference_frame('base_link')
@@ -73,9 +70,7 @@ class DensoInterface:
 
     def _init_scene(self):
         """
-
         General scene configuration. Default objects like boxes or meshes can be added here. For example:
-
         """
         self.scene = moveit_commander.PlanningSceneInterface()
         self.scene_objs = {}
@@ -86,13 +81,11 @@ class DensoInterface:
 
     def _state_callback(self, data):
         """
-
         Callback for trajectory action server messages, used in subscriber move_state_sub.
         
         @params
             data: actionlib_msgs.msg.GoalStatusArray
                 Stores the statuses for goals that are currently being tracked by an action server.
-
         """
         if (len(data.status_list) > 0):
             self.move_state = data.status_list.pop().status
@@ -114,10 +107,8 @@ class DensoInterface:
 
     def wait_trajectory_execution(self):
         """
-
         Wait until trajectory execution is not PENDING nor ACTIVE anymore.
         The 1 second sleep, at the end of the trajectory, prevent the robot from not finding next one.
-
         """
         while (not rospy.is_shutdown()):
             self.update()
@@ -128,7 +119,6 @@ class DensoInterface:
 
     def wait_for_state_update(self, object_name, object_is_attached=False, object_in_scene=False, timeout=4):
         """
-
         When adding a new object to the scene, it takes a little time to be avaliable for operations.
         Also, one object can be in none or only (and only) state from the following:
             - Attached to the robot, moving with it
@@ -150,7 +140,6 @@ class DensoInterface:
         @returns
             Boolean
                 True if desired update of object was reached. False otherwise.
-
         """
         start = rospy.get_time()
         seconds = rospy.get_time()
@@ -179,7 +168,6 @@ class DensoInterface:
 
     def add_box_to_scene(self, box_name, parent_link_name, box_position=[0,0,0], box_orientation=[0,0,0,1], box_size=1, box_color=[1, 1, 0, 0]):
         """
-
         Create a MoveIT collision box and a new TF assigned to it. TF information is stored in self.scene_objs dictionary.
         Also calls self.add_box_to_markers in order to create a visual representation.
 
@@ -196,7 +184,6 @@ class DensoInterface:
                 Size of the box in meters.
             box_color: 4-element Integer array
                 Color of the box in the sequence [Alpha, Red, Green, Blue].
-
         """
         box_pose = geometry_msgs.msg.PoseStamped()
         box_pose.header.frame_id = parent_link_name
@@ -214,7 +201,6 @@ class DensoInterface:
 
     def add_box_to_markers(self, box_name, parent_link_name, box_position=[0,0,0], box_orientation=[0,0,0,1], box_size=1, box_color=[1, 1, 0, 0]):
         """
-
         Create a Marker box and attach it to self.marker_array.markers. This is the visual representation of a already existing MoveIT collision box.
         Assumes that a TF named box_name already exists.
 
@@ -231,7 +217,6 @@ class DensoInterface:
                 Size of the box in meters.
             box_color: 4-element Integer array
                 Color of the box in the sequence [Alpha, Red, Green, Blue].
-
         """
         box = visualization_msgs.msg.Marker()
         box.id = len(self.scene_markers.keys())
@@ -256,7 +241,6 @@ class DensoInterface:
 
     def add_mesh_to_scene(self, mesh_package_name, relative_path, mesh_name, parent_link_name, mesh_position=[0,0,0], mesh_orientation=[0,0,0,1], mesh_size=1, mesh_color=[1, 1, 1, 1]):
         """
-
         Create a MoveIT collision mesh and a new TF assigned to it. TF information is stored in self.scene_objs dictionary.
         Also calls self.add_mesh_to_markers in order to create a visual representation for it.
 
@@ -277,7 +261,6 @@ class DensoInterface:
                 Scale of the mesh in meters.
             mesh_color: 4-element Integer array
                 Color of the mesh in the sequence [Alpha, Red, Green, Blue].
-
         """    
         # Remove if already exists
         self.remove_object_from_scene(mesh_name)
@@ -308,7 +291,6 @@ class DensoInterface:
 
     def add_mesh_to_markers(self, mesh_package_name, relative_path, mesh_name, parent_link_name, mesh_color=[1, 1, 1, 1], mesh_position=[0,0,0], mesh_orientation=[0,0,0,1], mesh_size=1):
         """
-
         Create a MoveIT collision mesh and a new TF assigned to it. TF information is stored in self.scene_objs dictionary.
         Also calls self.add_mesh_to_markers in order to create a visual representation for it.
 
@@ -329,7 +311,6 @@ class DensoInterface:
                 Scale of the mesh in meters.
             mesh_color: 4-element Integer array
                 Color of the mesh in the sequence [Alpha, Red, Green, Blue].
-
         """
         full_mesh_path = 'package://' + mesh_package_name + relative_path
         mesh = visualization_msgs.msg.Marker()
@@ -358,7 +339,6 @@ class DensoInterface:
     
     def add_tf_to_scene(self, tf_name, parent_link_name, tf_position, tf_orientation=[0,0,0,1]):
         """ 
-
         Create a new TF alone and store in self.scene_objs. Its parent either from the robot or scene.
 
         @params
@@ -370,7 +350,6 @@ class DensoInterface:
                 XYZ position relative to the parent link.
             tf_orientation: 4-element Float array
                 Quaternion orientation relative to the parent link.
-
         """
         tf_pose = geometry_msgs.msg.PoseStamped()
         tf_pose.header.frame_id = parent_link_name
@@ -385,13 +364,11 @@ class DensoInterface:
 
     def remove_object_from_scene(self, obj_name):
         """
-
         Remove a box or a mesh from scene.
 
         @params
             obj_name: String
                 Name of object to be removed.
-
         """
         # Delete from TFs
         if (obj_name in self.scene_objs.keys()):
@@ -407,9 +384,7 @@ class DensoInterface:
 
     def broadcast_tfs(self):
         """
-
         Publish all TF pose transformations stored in self.scene_objs.
-
         """
         for (key, obj) in zip(self.scene_objs.keys(), self.scene_objs.values()):
             self.tf_broadcaster.sendTransform(
@@ -422,9 +397,7 @@ class DensoInterface:
 
     def update_markers(self):
         """
-
         Update each Marker element from self.marker_array.markers with TF poses from self.scene_objs dictionary.
-
         """
         self.marker_array.markers = []
         for key in self.scene_markers.keys():
@@ -441,7 +414,6 @@ class DensoInterface:
 
     def get_tf_transform(self, frame_name, frame_reference_name=None):
         """
-
         Get a TF from frame_reference_name to frame_name.
 
         @params
@@ -453,8 +425,6 @@ class DensoInterface:
         @returns
             2-element Tuple
                 A tuple containing a 3-element Float position array and a 4-element Float orientation array.
-
-
         """
         if (not frame_reference_name):
             frame_reference_name = self.robot.get_planning_frame()
@@ -469,7 +439,6 @@ class DensoInterface:
 
     def plan_trajectory(self, position=[0,0,0], orientation=[0, 0, 0, 1]):
         """
-
         Plan a trajectory from current wrist pose to desired wrist pose wrt base_link.
         
 
@@ -478,7 +447,6 @@ class DensoInterface:
                 Desired position for the wirst (last link) of the robot.
             orientation: 4-element Float array
                 Desired orientation for the wrist (last link) of the robot.
-
         """
         # Creating target_pose
         target_pose = geometry_msgs.msg.Pose()
@@ -500,16 +468,22 @@ class DensoInterface:
             print('[SCRIPT] Plan was sucessful.')    
             self.target_pose = target_pose
 
-    def plan_tool_trajectory(self, tool_frame, position=[0, 0, 0], orientation=[0, 0, 0, 1]):
+    def convert_tool_coordinates_to_wrist(self, tool_frame, position, orientation):
         """
-        Plan a trajectory from tool_frame pose to desired tool_frame pose wrt base_link.
+        Convert coordinates specified for tool to wrist coordinates.
 
         @params
             position: 3-element Float array
                 Desired position for the tool_frame.
             orientation: 4-element Float array
                 Desired orientation for the tool_frame.
-        """                
+
+        @returns
+            goal_pos: 3-element Float array
+                Desired position for the wrist.
+            goal_quat: 4-element Float array
+                Desired orientation for the wrist.
+        """
         # Calculate translation and rotation from tool to wrist
         (tool_to_wrist_trans, tool_to_wrist_quat) = self.get_tf_transform(tool_frame, 'simple_gripper_base')
         if (tool_to_wrist_quat is None):
@@ -528,18 +502,71 @@ class DensoInterface:
         goal_mat = numpy.dot(start_mat, transf_mat)
         goal_quat = tf.transformations.quaternion_from_matrix(goal_mat)
         goal_pos = tf.transformations.translation_from_matrix(goal_mat)
+        return goal_pos, goal_quat
+
+    def plan_tool_trajectory(self, tool_frame, position=[0, 0, 0], orientation=[0, 0, 0, 1]):
+        """
+        Plan a trajectory from tool_frame pose to desired tool_frame pose wrt base_link.
+
+        @params
+            position: 3-element Float array
+                Desired position for the tool_frame.
+            orientation: 4-element Float array
+                Desired orientation for the tool_frame.
+        """                
+        # Convert to wrist coordinates
+        goal_pos, goal_quat = self.convert_tool_coordinates_to_wrist(tool_frame, position, orientation)
         # Call the planning for new goal
         self.plan_trajectory(goal_pos, goal_quat)
 
+
+    def plan_multipoint_catesian_tool_trajectory(self, tool_frame, poses):
+        """
+        Plan a trajectory with multple poses of tool_frame wrt base_link.
+
+        @params
+            tool_frame: String
+                Name of frame that represents tool.
+            poses: Array of (position, orientation) tuples
+                Contains tuples of poses. Each tuple has a 3-element position array and a 4-element quaternion.
+
+        @returns
+            fraction: Float
+                How much of trajectory was possible to be planned
+        """
+        # We will fill this array with wrist poses
+        waypoints = []
+        for (position, orientation) in poses:
+            # Transform to wrist coordinates
+            t_position, t_orientation = self.convert_tool_coordinates_to_wrist(tool_frame, position, orientation)
+            # Create pose for trajectory
+            pose = geometry_msgs.msg.Pose()
+            pose.position.x = t_position[0]
+            pose.position.y = t_position[1]
+            pose.position.z = t_position[2]
+            pose.orientation.x = t_orientation[0] 
+            pose.orientation.y = t_orientation[1]
+            pose.orientation.z = t_orientation[2]
+            pose.orientation.w = t_orientation[3]
+            # Append to our array
+            waypoints.append(pose)
+            print(pose)
+        # Plan trajectory. Interpolating with 1 cm of resolution (eef_step).
+        # Disable jump threshold by setting it to 0.0.
+        (plan, fraction) = self.group.compute_cartesian_path(
+                                        waypoints,   # waypoints to follow
+                                        0.001,    # eef_step
+                                        0)       # jump_threshold
+        self.plan = plan
+        return fraction
+
     def execute_trajectory(self, wait=False):
         """
-
         Try to execute previously planned trajectory. Not blocking by default.
 
         @params
             wait: Boolean
                 If function will block other executions until finishes.
-
         """
         try:
             self.group.execute(self.plan, wait=False)
@@ -551,13 +578,11 @@ class DensoInterface:
 
     def attach_box(self, box_name):
         """
-
         Attach an already existing box to the end-effector frame.
 
         @params
             box_name: String
                 Name of the box. Should exist as one of self.scene_objs key.
-
         """
         touch_links = self.robot.get_link_names(group='gripper_group')
         del self.scene_objs[box_name]
@@ -569,13 +594,11 @@ class DensoInterface:
 
     def attach_mesh(self, mesh_name):
         """
-
         Attach an already existing mesh to the end-effector frame.
 
         @params
             obj_name: String
                 Name of the object. Should exist as one of self.scene_objs key.
-
         """
         touch_links = self.robot.get_link_names(group='gripper_group')
         del self.scene_objs[mesh_name]
@@ -587,13 +610,11 @@ class DensoInterface:
 
     def dettach_box(self, box_name):
         """
-
         Dettach an already existing box from the end-effector frame.
 
         @params
             box_name: String
                 Name of the box. Should exist as one of self.scene_objs key.
-
         """
         del self.scene_objs[box_name]
         eef_link = self.group.get_end_effector_link()
@@ -604,9 +625,7 @@ class DensoInterface:
 
     def detach_all(self):
         """
-
         Dettach all objects from the end-effector frame.
-
         """
         attached_objects = self.scene.get_attached_objects().keys()
         for object_name in attached_objects:
@@ -614,13 +633,11 @@ class DensoInterface:
 
     def update_gripper(self, joint_value, wait=False):
         """
-
         Updates gripper state.
 
         @params
             joint_value: Float
                 How much should gripper close. From 0 (totally opened) to 0.83 (totally closed).
-
         """
         if (joint_value < 0):
             joint_value = 0
@@ -636,13 +653,11 @@ class DensoInterface:
 
     def wait_time(self, timeout):
         """
-
         Wait for some time, updating TFs and Markers
 
         @params
             timeout : Integer
                 Time in seconds to wait.
-
         """
         start = rospy.get_time()
         seconds = rospy.get_time()
@@ -654,9 +669,7 @@ class DensoInterface:
 
     def init_ik_mode(self):
         """
-
         Put robot in real_time inverse kinematics state. Does not use trajectory action server anymore.
-        
         """
         rospy.wait_for_service('compute_ik')
         self.compute_ik = rospy.ServiceProxy('compute_ik', moveit_msgs.srv.GetPositionIK, persistent=True)
@@ -668,7 +681,6 @@ class DensoInterface:
     
     def move_to_pose(self, position, orientation, gripper_joint_state=0, base_frame='base_link'):
         """        
-
         Move robot to a new pose if different from the current one.
 
         @params
@@ -684,7 +696,6 @@ class DensoInterface:
         @returns
             Boolean
                 Sucess of inverse kinematics motion
-        
         """
         if ( numpy.array_equal(position, self.last_ik_position) and numpy.array_equal(orientation, self.last_ik_orientation) ):
             return True
@@ -739,7 +750,6 @@ class DensoInterface:
 
     def get_close_transforms(self, tool_frame='tool_center', threshold=0.05):
         """
-
         Get all TFs that are close to tool_frame
 
         @params
@@ -747,7 +757,6 @@ class DensoInterface:
                 Name of the tool_frame being analyzed.
             threshold: Float
                 Radius in meters in order to a TF be considered close and be returned.
-
         """
         close_objects = []
         for object_name in self.scene_objs.keys():
@@ -773,9 +782,7 @@ class DensoInterface:
     
     def update(self):
         """
-
         Broadcast TFs and publish markers informations before get to the next time step.
-
         """
         self.update_markers()
         self.broadcast_tfs()
