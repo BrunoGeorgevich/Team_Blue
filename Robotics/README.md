@@ -48,3 +48,12 @@ Run the MoveIT demo:
 roslaunch vp6242b_moveit_config demo.launch 
 ```
 
+Open another terminal and run TicTacToe environment:
+```
+rosrun vp6242b_tasks task_03_tic_tac_toe.py
+```
+
+If you want to see some random board state, open another terminal and run:
+```
+rosrun vp6242b_tasks randomize_board_state.py
+```

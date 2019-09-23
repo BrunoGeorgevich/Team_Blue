@@ -19,13 +19,14 @@ LAST_BOARD_STATE =  np.empty((3, 3), dtype=object) # -1 is X, 1 is O, 0 is empty
 NEW_BOARD_STATE =  np.empty((3, 3), dtype=object)  # -1 is X, 1 is O, 0 is empty
 PROCESSED_NEW_BOARD_STATE = True                   # Only process new one if last was done processing
 CELL_POSITIONS = np.empty((3, 3), dtype=object)     # Cell positions of form (X, Y)
+STARTED = False
 
 def board_state_cb(multiarray_data):
     """
     Callback for board state messages.
     """
     global NEW_BOARD_STATE, PROCESSED_NEW_BOARD_STATE
-    if (PROCESSED_NEW_BOARD_STATE == False):
+    if ( (PROCESSED_NEW_BOARD_STATE == False) or (STARTED == False) ):
         return
     PROCESSED_NEW_BOARD_STATE = False
     NEW_BOARD_STATE = np.array(multiarray_data.data).reshape((3, 3))
@@ -35,24 +36,23 @@ def process_board_state():
     Function to update table in RViz
     """
     global LAST_BOARD_STATE, NEW_BOARD_STATE, PROCESSED_NEW_BOARD_STATE, INTERFACE
+    # INTERFACE.update()
     for i in range(3):
         for j in range(3):
             # Define cell name
             cell_name = 'cell_{}_{}'.format(i, j)
-            # Check if state changed
-            if (LAST_BOARD_STATE[i][j] != NEW_BOARD_STATE[i][j]):
-                # Define new value of cell
-                cell_value = NEW_BOARD_STATE[i][j]
-                # Check if not empty
-                if (cell_value == 1 or cell_value == -1):
-                    # Define new mesh model
-                    mesh_model = ('X' if cell_value == -1 else 'O')
-                    # Define mesh position
-                    x, y = CELL_POSITIONS[i][j]
-                    # Add new mesh
-                    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/{}.dae'.format(mesh_model), cell_name, 'board_marks', mesh_position=[x, y, 0], mesh_color=[1, 0, 0, 0])
-                else:
-                    INTERFACE.remove_object_from_scene(cell_name)
+            # Define new value of cell
+            cell_value = NEW_BOARD_STATE[i][j]
+            # Check if not empty
+            if (cell_value == 1 or cell_value == -1):
+                # Define new mesh model
+                mesh_model = ('X' if cell_value == -1 else 'O')
+                # Define mesh position
+                x, y = CELL_POSITIONS[i][j]
+                # Add new mesh
+                INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/{}.dae'.format(mesh_model), cell_name, 'board_marks', mesh_position=[x, y, 0], mesh_color=[1, 0, 0, 0])
+            else:
+                INTERFACE.remove_object_from_scene(cell_name)
     # Allow new messages to be analyzed
     PROCESSED_NEW_BOARD_STATE = True
 
@@ -87,6 +87,8 @@ def run_node():
             CELL_POSITIONS[i][j] = (X, Y)
 
     # Board state listener
+    INTERFACE.update()
+    STARTED = True
     rospy.Subscriber('board_state', Int8MultiArray, board_state_cb)
     # Main loop
     while(not rospy.is_shutdown()):

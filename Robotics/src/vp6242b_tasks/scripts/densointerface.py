@@ -80,8 +80,9 @@ class DensoInterface:
         self.scene = moveit_commander.PlanningSceneInterface()
         self.scene_objs = {}
         self.marker_array = visualization_msgs.msg.MarkerArray()
+        self.scene_markers = {}
         self.update()
-        rospy.sleep(1)
+        self.wait_time(1)
 
     def _state_callback(self, data):
         """
@@ -123,7 +124,7 @@ class DensoInterface:
             self.rate.sleep()
             if (self.get_status() >= actionlib_msgs.msg.GoalStatus.PREEMPTED):
                 break
-        rospy.sleep(1)
+        self.wait_time(1)
 
     def wait_for_state_update(self, object_name, object_is_attached=False, object_in_scene=False, timeout=4):
         """
@@ -233,7 +234,7 @@ class DensoInterface:
 
         """
         box = visualization_msgs.msg.Marker()
-        box.id = len(self.marker_array.markers)
+        box.id = len(self.scene_markers.keys())
         box.header.stamp = self.now
         box.text = box_name
         box.type = visualization_msgs.msg.Marker.CUBE
@@ -249,7 +250,8 @@ class DensoInterface:
         box.color.r = box_color[1]
         box.color.g = box_color[2]
         box.color.b = box_color[3]
-        self.marker_array.markers.append(box)
+        # self.marker_array.markers.append(box)
+        self.scene_markers[box_name] = box
 
 
     def add_mesh_to_scene(self, mesh_package_name, relative_path, mesh_name, parent_link_name, mesh_position=[0,0,0], mesh_orientation=[0,0,0,1], mesh_size=1, mesh_color=[1, 1, 1, 1]):
@@ -332,7 +334,7 @@ class DensoInterface:
         full_mesh_path = 'package://' + mesh_package_name + relative_path
         mesh = visualization_msgs.msg.Marker()
         mesh.text = mesh_name
-        mesh.id = len(self.marker_array.markers)
+        mesh.id = sum([ord(c)*i for i, c in enumerate(mesh_name)])
         mesh.header.stamp = self.now
         mesh.header.frame_id = parent_link_name
         mesh.type = visualization_msgs.msg.Marker.MESH_RESOURCE
@@ -350,8 +352,9 @@ class DensoInterface:
         mesh.color.r = mesh_color[1]
         mesh.color.g = mesh_color[2]
         mesh.color.b = mesh_color[3]
-        mesh.lifetime = rospy.Duration(1)
-        self.marker_array.markers.append(mesh)
+        mesh.lifetime = rospy.Duration(0.2)
+        # self.marker_array.markers.append(mesh)
+        self.scene_markers[mesh_name] = mesh
     
     def add_tf_to_scene(self, tf_name, parent_link_name, tf_position, tf_orientation=[0,0,0,1]):
         """ 
@@ -397,9 +400,9 @@ class DensoInterface:
         scene_objects = self.scene.get_known_object_names()
         if (obj_name in scene_objects):
             self.scene.remove_world_object(obj_name)
-        # Search for names in marker_array
-        for marker in filter(lambda x: (x.text == obj_name), self.marker_array.markers):
-            self.marker_array.markers.remove(marker)
+        # Delete from markers
+        if (obj_name in self.scene_markers.keys()):
+            del self.scene_markers[obj_name]
         
 
     def broadcast_tfs(self):
@@ -423,13 +426,16 @@ class DensoInterface:
         Update each Marker element from self.marker_array.markers with TF poses from self.scene_objs dictionary.
 
         """
-        for i in range(len(self.marker_array.markers)):
-            marker_name = self.marker_array.markers[i].text
-            if (marker_name in self.scene_objs.keys()):
-                self.marker_array.markers[i].pose.position = self.scene_objs[marker_name]['position']
-                self.marker_array.markers[i].pose.orientation = self.scene_objs[marker_name]['orientation']
-                self.marker_array.markers[i].header.stamp = self.now
-                self.marker_array.markers[i].header.frame_id = self.scene_objs[marker_name]['parent_link']
+        self.marker_array.markers = []
+        for key in self.scene_markers.keys():
+            if ( key in self.scene_objs.keys() ):
+                # Update values
+                self.scene_markers[key].pose.position = self.scene_objs[key]['position']
+                self.scene_markers[key].pose.orientation = self.scene_objs[key]['orientation']
+                self.scene_markers[key].header.stamp = self.now
+                self.scene_markers[key].header.frame_id = self.scene_objs[key]['parent_link']
+                # Append to array
+                self.marker_array.markers.append(self.scene_markers[key])
    
         self.marker_array_pub.publish( self.marker_array )
 
@@ -626,7 +632,25 @@ class DensoInterface:
         joint_state_msg.position.append(joint_value)
         self.joint_state_pub.publish(joint_state_msg)
         if( wait ):
-            rospy.sleep(1)
+            self.wait_time(1)
+
+    def wait_time(self, timeout):
+        """
+
+        Wait for some time, updating TFs and Markers
+
+        @params
+            timeout : Integer
+                Time in seconds to wait.
+
+        """
+        start = rospy.get_time()
+        seconds = rospy.get_time()
+        while (seconds - start < timeout) and not rospy.is_shutdown():
+            self.update()
+            self.rate.sleep()
+            seconds = rospy.get_time()
+
 
     def init_ik_mode(self):
         """

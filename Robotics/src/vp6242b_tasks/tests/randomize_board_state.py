@@ -26,7 +26,7 @@ def run_node():
         state.layout.dim[1].size = 3   # Size of whole data structure from here
         state.layout.dim[1].stride = 3 # Number of cols
         state.data = [ randint(-1, 1) for i in range(9) ]
-        print('[SCRIPT] Publishing {}'.format(state.data))
+        print('[SCRIPT] Published {}'.format(state.data))
         state_pub.publish(state)
 
     # Main loop
