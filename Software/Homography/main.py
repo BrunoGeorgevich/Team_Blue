@@ -9,8 +9,14 @@ Created on Fri Jul 12 16:25:14 2019
 import cv2
 import cv2.aruco as aruco
 
+from time import sleep
+
+from random import randint, random
+
 import tensorflow as tf
 from object_detection.utils import label_map_util
+
+from minimax import ai_turn, clean, wins, render, empty_cells, game_over
 
 import numpy as np
 
@@ -19,11 +25,11 @@ calibrationParams = cv2.FileStorage(calibrationFile, cv2.FILE_STORAGE_READ)
 camera_matrix = calibrationParams.getNode("camera_matrix").mat()
 dist_coeffs = calibrationParams.getNode("distCoeffs").mat()
 
-H = 116
-W = 164
-CENTERS = [[(256,184), (420,184), (584,184)],
-           [(256,300), (420,300), (584,300)],
-           [(256,416), (420,416), (584,416)]]
+HUMAN = 1
+COMP = -1
+
+h_choice = 'O'
+c_choice = 'X'
 
 PATH_TO_CKPT = 'graph.pb'
 PATH_TO_LABELS = 'labelmap.pbtxt'
@@ -152,8 +158,6 @@ def retrieve_central_dots(frame):
         aux_dots = list(map(lambda tup: (tup[0], tup[1]), aux_dots))
         dots.append(aux_dots)
 
-    frame = cv2.rectangle(frame, (dots[0][0][0], dots[0][0][1]), (dots[0][0][0] + 7, dots[0][0][1] + 7), (255,0,255), 7)
-
     return frame, dots
 
 def retrieve_cells(distorced_warped):
@@ -162,17 +166,18 @@ def retrieve_cells(distorced_warped):
     cells = {}
 
     idx = 1
+
     for row in CENTERS:
         for cell in row:
             x1, x2 = (-W/2 + cell[0], W/2 + cell[0])
             y1, y2 = (-H/2 + cell[1], H/2 + cell[1])
             cells[idx] = distorced_warped[int(y1):int(y2), int(x1):int(x2)]
             idx += 1
-
     return cells
 
 def predict(image):
     global sess
+
     image_expanded = np.expand_dims(image, axis=0)
 
     (boxes, scores, classes, num) = sess.run(
@@ -182,7 +187,7 @@ def predict(image):
     predictions = list(zip(np.squeeze(boxes),
     	 np.squeeze(classes).astype(np.int32),
     	 np.squeeze(scores)))
-    
+
     predictions.sort(key=lambda it: it[2], reverse=True)
     return predictions[0]
 
@@ -200,11 +205,33 @@ def draw_prediction(image, prediction):
     score = prediction[2]
     class_name = category_index[prediction[1]]['name']
 
-    if score < 0.99:
+    if score < 0.8:
         class_name = "-"
 
     cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 5)
     cv2.putText(image, f"{class_name} | {score:.2f}", (int((x2 - x1)/6), int((y2 - y1)/6)), cv2.FONT_HERSHEY_SIMPLEX, int(h*0.009),(0,200,0), int(w*0.009))
+    return image
+
+def randomize_image(image):
+    noised = np.zeros_like(image)
+    channels = cv2.split(noised)
+    
+    for channel in channels:
+        channel = cv2.randn(channel, 128, 64)
+    
+    noised = cv2.merge(channels)
+    
+    foreground = np.zeros_like(image)
+    channels = cv2.split(foreground)
+    
+    for channel in channels:
+        channel +=  np.uint8(30 + 200*random())
+    
+    foreground = cv2.merge(channels)
+    
+    image[image == 255] = noised[image == 255]
+    image[image == 0] = foreground[image == 0]
+
     return image
 
 def current_board_state(cells):
@@ -214,26 +241,110 @@ def current_board_state(cells):
         | 7 | 8 | 9 |
     '''
 
-    for k in cells.keys():
+    for i,k in enumerate(cells.keys()):
         cell = cells[k]
-        prediction = predict(cell)
+
+        gray = cv2.cvtColor(cell, cv2.COLOR_BGR2GRAY)
+
+        aux = cv2.adaptiveThreshold(gray,
+                                    255,
+                                    cv2.ADAPTIVE_THRESH_MEAN_C,
+                                    cv2.THRESH_BINARY_INV,
+                                    75,
+                                    3)
+
+        cnts, _ = cv2.findContours(aux, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        cnts = list(map(lambda it: (it, cv2.contourArea(it)), cnts))
+        cnts = list(filter(lambda it: it[1] > 50, cnts))
+        cnts.sort(key=lambda it: it[1], reverse=True)
+
+        if len(cnts) <= 0:
+            board = board.replace(f'{k}', ' ')
+            continue
+
+        cnts = cnts[0][0]
+
+        bg = np.ones_like(aux)*255
+        x,y,w,h = cv2.boundingRect(cnts)
+        bg[y:y+h,x:x+w] = ~aux[y:y+h,x:x+w]
+
+        gray = cv2.merge([bg, bg, bg])
+        gray = randomize_image(gray)
+
+        # cv2.imshow(str(k), gray)
+
+        prediction = predict(gray)
 
         score = prediction[2]
         class_name = category_index[prediction[1]]['name']
-    
-        if score < 0.975:
+
+        # print(f'{k} -> SCORE {score:.2f} : {class_name}')
+
+        if score < 0.95:
             class_name = " "
 
         board = board.replace(f'{k}', class_name)
 
-    print(board)
+    def remap(class_name):
+        if class_name == 'X':
+            return -1
+        elif class_name == 'O':
+            return 1
+        elif class_name == '':
+            return 0
 
+    board_symbol = board.replace(' ','').replace('|\n','').replace('\n|','').split("|")
+    board_symbol = list(map(remap, board_symbol))
 
+    # print(board)
+    return board_symbol
 
-reference = cv2.imread("assets/reference.png")
+def get_board_state(distorced_pts):
+    M = cv2.getPerspectiveTransform(distorced_pts,reference_pts)
+            
+    rows,cols,ch = reference.shape
+    distorced_warped = cv2.warpPerspective(distorced,M,(cols,rows))
+    distorced_warped_dotted = draw_dots(distorced_warped)
+
+    # cv2.imshow("Distorced Warped", distorced_warped)
+
+    cells = retrieve_cells(distorced_warped)
+    board_symbol = current_board_state(cells)
+    
+    M = cv2.getPerspectiveTransform(reference_pts, distorced_pts)
+
+    rows,cols,ch = distorced.shape
+    distorced_reverse_warped = cv2.warpPerspective(distorced_warped_dotted,M,(cols,rows))
+    distorced_reverse_warped, dots = retrieve_central_dots(distorced_reverse_warped)
+    return dots, board_symbol, distorced_warped, distorced_reverse_warped
+
+def check_victory(board):
+
+    if wins(board, HUMAN):
+        render(board, c_choice, h_choice)
+        print('YOU WIN!')
+    elif wins(board, COMP):
+        render(board, c_choice, h_choice)
+        print('YOU LOSE!')
+    else:
+        render(board, c_choice, h_choice)
+        print('DRAW!')
+
+reference = cv2.imread("assets/reference_board.png")
+
+BOARD_W = reference.shape[1]
+BOARD_H = reference.shape[0]
+
+H = int(BOARD_W*0.12)
+W = int(BOARD_W*0.12)
+
+CENTERS = [[(int(BOARD_W*0.34),int(BOARD_H*0.28)), (int(BOARD_W*0.5),int(BOARD_H*0.28)), (int(BOARD_W*0.66),int(BOARD_H*0.28))],
+           [(int(BOARD_W*0.34),int(BOARD_H*0.5)) , (int(BOARD_W*0.5),int(BOARD_H*0.5)) , (int(BOARD_W*0.66),int(BOARD_H*0.5)) ],
+           [(int(BOARD_W*0.34),int(BOARD_H*0.72)), (int(BOARD_W*0.5),int(BOARD_H*0.72)), (int(BOARD_W*0.66),int(BOARD_H*0.72))]]
 
 reference_aruco, reference_tags = detect_aruco(reference)
-    
+
 reference_pts = np.float32([
             list(reference_tags[0]['center']),
             list(reference_tags[1]['center']),
@@ -241,9 +352,8 @@ reference_pts = np.float32([
             list(reference_tags[3]['center'])
         ])
 
-cv2.namedWindow("Reference", cv2.WINDOW_KEEPRATIO)
+# cv2.namedWindow("Reference", cv2.WINDOW_KEEPRATIO)
 cv2.namedWindow("Distorced", cv2.WINDOW_KEEPRATIO)
-cv2.namedWindow("Distorced Warped", cv2.WINDOW_KEEPRATIO)
 cv2.namedWindow("Reverse Warped", cv2.WINDOW_KEEPRATIO)
 
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
@@ -267,41 +377,82 @@ detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FPS, 1)
+current_turn = HUMAN
 
-while cv2.waitKey(1) != ord("q"):
+last_frame_board = [[None,None, None],[None,None, None],[None,None, None]]
+equal_times = 0
+
+while cv2.waitKey(1) != 27:
     _,distorced = cap.read()
+    distorced = cv2.resize(distorced, (640, 480))
+    distorced = cv2.cvtColor(distorced, cv2.COLOR_BGR2GRAY)
+    distorced = cv2.merge([distorced, distorced, distorced])
+
     distorced_aruco, distorced_tags = detect_aruco(distorced)
 
     if distorced_tags is not None and len(distorced_tags.keys()) == 4:
         if 0 in distorced_tags.keys() and \
-           1 in distorced_tags.keys() and \
-           2 in distorced_tags.keys() and \
-           3 in distorced_tags.keys():
-            distorced_pts = np.float32([
-                        list(distorced_tags[0]['center']),
-                        list(distorced_tags[1]['center']),
-                        list(distorced_tags[2]['center']),
-                        list(distorced_tags[3]['center'])
-                    ])
-            
-            M = cv2.getPerspectiveTransform(distorced_pts,reference_pts)
-            
-            rows,cols,ch = reference.shape
-            distorced_warped = cv2.warpPerspective(distorced,M,(cols,rows))
-            distorced_warped_dotted = draw_dots(distorced_warped)
-            cv2.imshow("Distorced Warped", distorced_warped)
+            1 in distorced_tags.keys() and \
+            2 in distorced_tags.keys() and \
+            3 in distorced_tags.keys():
 
-            cells = retrieve_cells(distorced_warped)
-            current_board_state(cells)
-            
-            M = cv2.getPerspectiveTransform(reference_pts, distorced_pts)
-    
-            rows,cols,ch = distorced.shape
-            distorced_reverse_warped = cv2.warpPerspective(distorced_warped_dotted,M,(cols,rows))
-            distorced_reverse_warped, dots = retrieve_central_dots(distorced_reverse_warped)
-            cv2.imshow("Reverse Warped", distorced_reverse_warped)
+                distorced_pts = np.float32([
+                            list(distorced_tags[0]['center']),
+                            list(distorced_tags[1]['center']),
+                            list(distorced_tags[2]['center']),
+                            list(distorced_tags[3]['center'])
+                        ])
 
-    cv2.imshow("Reference", draw_dots(reference))
+                dots, board, distorced_warped, distorced_reverse_warped = get_board_state(distorced_pts)
+
+                cv2.imshow("Reverse Warped", distorced_warped)
+
+                board = np.reshape(board, (3,3))
+
+                print(f"ANALISANDO {equal_times + 1}/4!!")
+
+                if equal_times < 3:
+                    if (last_frame_board == board).all():
+                        equal_times += 1
+                    else:
+                        equal_times = 0
+                    last_frame_board = board
+                    continue
+
+                if len(empty_cells(board)) <= 0 or game_over(board):
+                    check_victory(board)
+                    break
+
+                clean()
+
+                if current_turn == COMP:
+                    print("VEZ DO COMPUTADOR!")
+                    board = ai_turn(c_choice, h_choice, board)
+                elif current_turn == HUMAN:
+                    print("VEZ DO HUMANO!")
+
+                render(board, c_choice, h_choice)
+
+                print("QUANDO FINALIZAR A JOGADA APERTE Q!")
+
+                while cv2.waitKey(1) != ord("q"):
+                    _,distorced = cap.read()
+                    distorced = cv2.resize(distorced, (1280, 960))
+                    distorced = cv2.cvtColor(distorced, cv2.COLOR_BGR2GRAY)
+                    distorced = cv2.merge([distorced, distorced, distorced])
+                    cv2.imshow("Distorced", distorced)
+
+                equal_times = 0
+                last_frame_board = board
+
+                if current_turn == HUMAN:
+                    current_turn = COMP
+                elif current_turn == COMP:
+                    current_turn = HUMAN
+
+    else:
+        print("NAO FORAM DETECTADAS AS 4 TAGS!")
     cv2.imshow("Distorced", distorced)
 
 cap.release()
