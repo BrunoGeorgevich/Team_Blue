@@ -71,20 +71,21 @@ def draw_X(row, column):
     # Get transformation from base_link to cell_name object
     position, _ = INTERFACE.get_tf_transform('base_link', frame_reference_name=cell_name)
     # Create an array of points around cell position with fixed orientation
-    orientation = [0.7071, 0.7071, 0, 0]
+    orientation = [0.707, 0, 0, 0.707]
     poses = []
     offset_low = 0.08
     offset_high = 0.10
     # First line
-    poses.append( ([position[0] - 0.02 , position[1] - 0.02, position[2] + offset_high], orientation) )
-    poses.append( ([position[0] - 0.02 , position[1] - 0.02, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + 0.02 , position[1] + 0.02, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + 0.02 , position[1] + 0.02, position[2] + offset_high], orientation) )
+    symbol_size = 0.015
+    poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + symbol_size , position[1] + symbol_size, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + symbol_size , position[1] + symbol_size, position[2] + offset_high], orientation) )
     # Second line
-    poses.append( ([position[0] - 0.02 , position[1] + 0.02, position[2] + offset_high], orientation) )
-    poses.append( ([position[0] - 0.02 , position[1] + 0.02, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + 0.02 , position[1] - 0.02, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + 0.02 , position[1] - 0.02, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - symbol_size , position[1] + symbol_size, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - symbol_size , position[1] + symbol_size, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + symbol_size , position[1] - symbol_size, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + symbol_size , position[1] - symbol_size, position[2] + offset_high], orientation) )
     # Move to starting point
     starting_position, _ = poses[0]
     INTERFACE.plan_tool_trajectory(tool_frame='tool_center', position=starting_position, orientation=orientation)
@@ -93,8 +94,8 @@ def draw_X(row, column):
     # Try to plan trajectory    
     fraction = INTERFACE.plan_multipoint_catesian_tool_trajectory('tool_center', poses)
     print('[SCRIPT] Completed {} \% of trajectory.'.format(fraction * 100))
-    if (fraction == 1):
-        INTERFACE.execute_trajectory(wait=True)
+    # if (fraction == 1):
+    #     INTERFACE.execute_trajectory(wait=True)
 
 
 def command_cb(multiarray_data):
@@ -117,9 +118,10 @@ def run_node():
     # Robot interface configs
     INTERFACE = DensoInterface(group_name='arm_group', rate=RATE)
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/table.dae', 'table', 'world', mesh_orientation=[0, 0, 0.7071, 0.7071], mesh_color=[1, 0.984, 0.956, 0.796])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35, 0, 0.02], mesh_color=[1, 1, 1, 1])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35, 0, 0.02], mesh_color=[1, 0, 0, 0])
-    INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14])
+    X_OFFSET = 0.1
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02], mesh_color=[1, 0, 0, 0])
+    INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14], [ 0, -0.7068252, 0, 0.7073883 ])
     INTERFACE.update()
 
     # Move to home pose
@@ -151,7 +153,10 @@ def run_node():
         for j in range(3):
             draw_X(i, j)
     # Denso only reach first row... Need to create a smaller and closer table
-    
+    INTERFACE.update()
+    print('[SCRIPT] Transform from base origin: {}'.format(INTERFACE.get_tf_transform('base_org', 'tool_center')))    
+    INTERFACE.move_to_stored_pose('home')
+
     # Main loop
     while(not rospy.is_shutdown()):
         try:

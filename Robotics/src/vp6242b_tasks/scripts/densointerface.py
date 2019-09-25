@@ -454,8 +454,8 @@ class DensoInterface:
         target_pose.orientation = geometry_msgs.msg.Quaternion(orientation[0], orientation[1], orientation[2], orientation[3])
         self.group.set_pose_target(target_pose)
         # Profiling time
-        print('[SCRIPT] Starting planning for new target pose: ')
-        print(target_pose)
+        # print('[SCRIPT] Starting planning for new target pose: ')
+        # print(target_pose)
         now = rospy.Time.now()
         self.plan = self.group.plan()
         then = rospy.Time.now()
@@ -554,9 +554,9 @@ class DensoInterface:
         # Plan trajectory. Interpolating with 1 cm of resolution (eef_step).
         # Disable jump threshold by setting it to 0.0.
         (plan, fraction) = self.group.compute_cartesian_path(
-                                        waypoints,   # waypoints to follow
-                                        0.001,    # eef_step
-                                        0)       # jump_threshold
+                                        waypoints,  # waypoints to follow
+                                        0.001,      # eef_step
+                                        0)          # jump_threshold
         self.plan = plan
         return fraction
 
