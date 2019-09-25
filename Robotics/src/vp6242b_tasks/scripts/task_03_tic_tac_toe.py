@@ -13,8 +13,8 @@ NODE_NAME = 'board_environment'
 OPEN_GRIPPER_JOINT = 0.0
 CLOSE_GRIPPER_JOINT = 0.65
 GRIPPER_IS_CLOSED = False
-COL_WIDTH = 0.137
-ROW_HEIGHT = 0.096
+COL_WIDTH = 0.08 + 0.018
+ROW_HEIGHT = 0.08 + 0.018
 LAST_BOARD_STATE =  np.empty((3, 3), dtype=object) # -1 is X, 1 is O, 0 is empty
 NEW_BOARD_STATE =  np.empty((3, 3), dtype=object)  # -1 is X, 1 is O, 0 is empty
 PROCESSED_NEW_BOARD_STATE = True                   # Only process new one if last was done processing
@@ -117,8 +117,8 @@ def run_node():
     # Robot interface configs
     INTERFACE = DensoInterface(group_name='arm_group', rate=RATE)
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/table.dae', 'table', 'world', mesh_orientation=[0, 0, 0.7071, 0.7071], mesh_color=[1, 0.984, 0.956, 0.796])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.4, 0, 0.02], mesh_color=[1, 1, 1, 1])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.4, 0, 0.02], mesh_color=[1, 0, 0, 0])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35, 0, 0.02], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35, 0, 0.02], mesh_color=[1, 0, 0, 0])
     INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14])
     INTERFACE.update()
 
@@ -147,12 +147,11 @@ def run_node():
     rospy.Subscriber('arm_command', Int8MultiArray, command_cb)
 
     # TODO: Erase next lines. Only for tests
-    draw_X(0, 0)
-    draw_X(0, 1)
-    draw_X(0, 2)
+    for i in range(3):
+        for j in range(3):
+            draw_X(i, j)
     # Denso only reach first row... Need to create a smaller and closer table
-    draw_X(1, 1)
-
+    
     # Main loop
     while(not rospy.is_shutdown()):
         try:

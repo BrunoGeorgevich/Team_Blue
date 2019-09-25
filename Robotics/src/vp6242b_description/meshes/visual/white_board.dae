@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
   <asset>
     <contributor>
       <author>Blender User</author>
-      <authoring_tool>Blender 2.79.0 commit date:2018-03-22, commit time:14:10, hash:f4dc9f9d68b</authoring_tool>
+      <authoring_tool>Blender 2.79.0</authoring_tool>
     </contributor>
-    <created>2019-09-21T18:51:57</created>
-    <modified>2019-09-21T18:51:57</modified>
+    <created>2019-09-25T10:36:26</created>
+    <modified>2019-09-25T10:36:26</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -16,7 +16,7 @@
     <geometry id="Plane-mesh" name="Plane">
       <mesh>
         <source id="Plane-mesh-positions">
-          <float_array id="Plane-mesh-positions-array" count="36">0.2499961 -0.3500242 0 0.2499961 0.3500242 0 -0.2499961 -0.3500241 0 -0.2499961 0.3500242 0 0.2499961 -0.3500242 -0.01999765 0.2499961 0.3500242 -0.01999765 -0.2499961 -0.3500241 -0.01999765 -0.2499961 0.3500242 -0.01999765 -0.03338003 -0.03338003 0.002534389 0.03338009 -0.03338003 0.002534389 -0.03338003 0.03338003 0.002534389 0.03338009 0.03338003 0.002534389</float_array>
+          <float_array id="Plane-mesh-positions-array" count="36">0.2274807 -0.3274781 0 0.2274807 0.327478 0 -0.2274807 -0.3274779 0 -0.2274807 0.3274781 0 0.2274807 -0.3274781 -0.01999765 0.2274807 0.327478 -0.01999765 -0.2274807 -0.3274779 -0.01999765 -0.2274807 0.3274781 -0.01999765 -0.02750247 -0.02827775 0.002534389 0.02750247 -0.02827775 0.002534389 -0.02750247 0.02827775 0.002534389 0.02750247 0.02827775 0.002534389</float_array>
           <technique_common>
             <accessor source="#Plane-mesh-positions-array" count="12" stride="3">
               <param name="X" type="float"/>
@@ -26,7 +26,7 @@
           </technique_common>
         </source>
         <source id="Plane-mesh-normals">
-          <float_array id="Plane-mesh-normals-array" count="33">0 0 1 0 0 -1 -1.19211e-7 -1 0 -1 0 0 1 0 0 0 1 0 0 0 -1 -1.19211e-7 -1 0 -1 -1.33052e-7 0 1 0 0 0 1 0</float_array>
+          <float_array id="Plane-mesh-normals-array" count="33">0 0 1 0 0 -1 -1.96515e-7 -1 0 -1 0 0 1 0 0 0 1 0 0 0 -1 -1.96516e-7 -1 0 -1 -1.42213e-7 0 1 0 0 0 1 0</float_array>
           <technique_common>
             <accessor source="#Plane-mesh-normals-array" count="11" stride="3">
               <param name="X" type="float"/>
@@ -56,7 +56,6 @@
       </mesh>
     </geometry>
   </library_geometries>
-  <library_controllers/>
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="Plane" name="Plane" type="NODE">

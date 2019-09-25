@@ -8,7 +8,7 @@ from random import randint
 def run_node():
     NODE_NAME = 'random_board_state_sender'
     TOPIC_NAME = 'board_state'
-    RATE = 0.2
+    RATE = 2
 
     # Init node
     rospy.init_node(NODE_NAME)
