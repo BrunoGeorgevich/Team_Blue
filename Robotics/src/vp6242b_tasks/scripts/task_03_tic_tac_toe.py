@@ -20,6 +20,7 @@ NEW_BOARD_STATE =  np.empty((3, 3), dtype=object)  # -1 is X, 1 is O, 0 is empty
 PROCESSED_NEW_BOARD_STATE = True                   # Only process new one if last was done processing
 CELL_POSITIONS = np.empty((3, 3), dtype=object)    # Cell positions of form (X, Y) relative to board center
 STARTED = False
+MOVING = False
 
 def board_state_cb(multiarray_data):
     """
@@ -65,7 +66,7 @@ def draw_X(row, column):
         position : tuple
             Row and column where the X will be drawn.
     """
-    global CELL_POSITIONS, INTERFACE
+    global CELL_POSITIONS, INTERFACE, MOVING
     # Define name of cell TF
     cell_name = 'cell_{}_{}'.format(row, column)
     # Get transformation from base_link to cell_name object
@@ -94,20 +95,25 @@ def draw_X(row, column):
     # Try to plan trajectory    
     fraction = INTERFACE.plan_multipoint_catesian_tool_trajectory('tool_center', poses)
     print('[SCRIPT] Completed {} \% of trajectory.'.format(fraction * 100))
-    # if (fraction == 1):
-    #     INTERFACE.execute_trajectory(wait=True)
-
+    if (fraction == 1):
+        INTERFACE.execute_trajectory(wait=True)
+        INTERFACE.move_to_stored_pose('home')
+    MOVING = False
 
 def command_cb(multiarray_data):
     """
     Callback for command messages.
     """
+    global INTERFACE, MOVING
+    if (MOVING):
+        return
+    MOVING = True
     row = multiarray_data.data[0]
     column = multiarray_data.data[1]
-    symbol = multiarray_data.data[2]
     # TODO: Create function draw_O
     # TODO: Check if symbol is X or O and call appropriate function
     draw_X(row, column)
+    INTERFACE.move_to_stored_pose('home', wait=True)
 
 def run_node():
     global RATE, NODE_NAME, OPEN_GRIPPER_JOINT, CLOSE_GRIPPER_JOINT, GRIPPER_IS_CLOSED, PROCESSED_NEW_BOARD_STATE, STARTED, INTERFACE
@@ -118,15 +124,17 @@ def run_node():
     # Robot interface configs
     INTERFACE = DensoInterface(group_name='arm_group', rate=RATE)
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/table.dae', 'table', 'world', mesh_orientation=[0, 0, 0.7071, 0.7071], mesh_color=[1, 0.984, 0.956, 0.796])
-    X_OFFSET = 0.1
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02], mesh_color=[1, 1, 1, 1])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02], mesh_color=[1, 0, 0, 0])
+    X_OFFSET = 0.15
+    Z_OFFSET = 0.10
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
     INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14], [ 0, -0.7068252, 0, 0.7073883 ])
     INTERFACE.update()
 
     # Move to home pose
     INTERFACE.move_to_stored_pose('home', wait=True)
-
+    INTERFACE.wait_time(1)
+    
     # Add pen to tool_frame and close the gripper
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/pen_only.dae', 'gripper_pen', 'tool_center', mesh_color=[1, 1, 1, 1])
     INTERFACE.update()
@@ -149,13 +157,13 @@ def run_node():
     rospy.Subscriber('arm_command', Int8MultiArray, command_cb)
 
     # TODO: Erase next lines. Only for tests
-    for i in range(3):
-        for j in range(3):
-            draw_X(i, j)
-    # Denso only reach first row... Need to create a smaller and closer table
-    INTERFACE.update()
-    print('[SCRIPT] Transform from base origin: {}'.format(INTERFACE.get_tf_transform('base_org', 'tool_center')))    
-    INTERFACE.move_to_stored_pose('home')
+    # for i in range(3):
+    #     for j in range(3):
+    #         draw_X(i, j)
+    # # Denso only reach first row... Need to create a smaller and closer table
+    # INTERFACE.update()
+    # print('[SCRIPT] Transform from base origin: {}'.format(INTERFACE.get_tf_transform('base_org', 'tool_center')))    
+    # INTERFACE.move_to_stored_pose('home')
 
     # Main loop
     while(not rospy.is_shutdown()):

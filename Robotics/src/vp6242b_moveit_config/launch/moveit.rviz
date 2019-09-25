@@ -12,7 +12,7 @@ Panels:
         - /TF1/Frames1
         - /MarkerArray1
       Splitter Ratio: 0.5124183297157288
-    Tree Height: 788
+    Tree Height: 608
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -130,146 +130,19 @@ Visualization Manager:
       Value: false
       Velocity_Scaling_Factor: 1
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 1
       Frames:
         All Enabled: false
-        base_link:
-          Value: true
-        base_link_aux:
-          Value: false
-        base_org:
-          Value: true
-        board_marks:
-          Value: false
-        cell_0_0:
-          Value: true
-        cell_0_1:
-          Value: true
-        cell_0_2:
-          Value: true
-        cell_1_0:
-          Value: true
-        cell_1_1:
-          Value: true
-        cell_2_0:
-          Value: true
-        cell_2_1:
-          Value: true
-        gripper_pen:
-          Value: false
-        link_1:
-          Value: true
-        link_1_aux:
-          Value: false
-        link_2:
-          Value: true
-        link_2_aux:
-          Value: false
-        link_3:
-          Value: true
-        link_3_aux:
-          Value: false
-        link_4:
-          Value: true
-        link_4_aux:
-          Value: false
-        link_5:
-          Value: true
-        link_5_aux:
-          Value: false
-        link_6:
-          Value: false
-        simple_gripper_base:
-          Value: true
-        simple_gripper_left_coupler:
-          Value: false
-        simple_gripper_left_driver:
-          Value: false
-        simple_gripper_left_follower:
-          Value: false
-        simple_gripper_left_pad:
-          Value: false
-        simple_gripper_left_spring_link:
-          Value: false
-        simple_gripper_right_coupler:
-          Value: false
-        simple_gripper_right_driver:
-          Value: false
-        simple_gripper_right_follower:
-          Value: false
-        simple_gripper_right_pad:
-          Value: false
-        simple_gripper_right_spring_link:
-          Value: false
-        table:
-          Value: false
-        tool_center:
-          Value: false
-        white_board:
-          Value: false
-        world:
-          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          base_org:
-            base_link:
-              base_link_aux:
-                link_1:
-                  link_1_aux:
-                    link_2:
-                      link_2_aux:
-                        link_3:
-                          link_3_aux:
-                            link_4:
-                              link_4_aux:
-                                link_5:
-                                  link_5_aux:
-                                    link_6:
-                                      simple_gripper_base:
-                                        simple_gripper_left_driver:
-                                          simple_gripper_left_coupler:
-                                            simple_gripper_left_follower:
-                                              simple_gripper_left_pad:
-                                                {}
-                                        simple_gripper_left_spring_link:
-                                          {}
-                                        simple_gripper_right_driver:
-                                          simple_gripper_right_coupler:
-                                            simple_gripper_right_follower:
-                                              simple_gripper_right_pad:
-                                                {}
-                                        simple_gripper_right_spring_link:
-                                          {}
-                                        tool_center:
-                                          gripper_pen:
-                                            {}
-            board_marks:
-              cell_0_0:
-                {}
-              cell_0_1:
-                {}
-              cell_0_2:
-                {}
-              cell_1_0:
-                {}
-              cell_1_1:
-                {}
-              cell_2_0:
-                {}
-              cell_2_1:
-                {}
-            white_board:
-              {}
-          table:
-            {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -454,19 +327,19 @@ Visualization Manager:
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: false
-  Height: 1023
+    collapsed: true
+  Height: 845
   Help:
     collapsed: false
-  Hide Left Dock: false
+  Hide Left Dock: true
   Hide Right Dock: false
   MotionPlanning:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000295000003a5fc0200000007fb000000100044006900730070006c006100790073010000003d000003a5000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000238000001aa0000019b00ffffff0000010f000003a500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000295000002f1fc0200000007fb000000100044006900730070006c006100790073000000003d000002f1000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000238000001aa0000019b00ffffff0000055d000002f300000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 938
-  X: 982
+  Width: 1373
+  X: 67
   Y: 27
