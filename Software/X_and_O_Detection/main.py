@@ -179,6 +179,7 @@ def randomize_image(image):
 
     return image
 
+
 train_list = os.listdir('images/train/')
 train_list = list(filter(lambda name: '.png' in name, train_list))
 path = 'images/train'
