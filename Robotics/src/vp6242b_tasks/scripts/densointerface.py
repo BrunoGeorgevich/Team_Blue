@@ -52,7 +52,7 @@ class DensoInterface:
         self.gripper_group = moveit_commander.MoveGroupCommander('gripper_group')
         self.gripper_group.set_planning_time(1)
         self.gripper_group.set_goal_position_tolerance(0.001)
-        self.gripper_group.set_goal_joint_tolerance(0.005)
+        self.gripper_group.set_goal_joint_tolerance(0.001)
         self.gripper_group.set_max_acceleration_scaling_factor = 1.0
         self.gripper_group.set_max_velocity_scaling_factor = 1.0
         self.gripper_group.set_pose_reference_frame('simple_gripper_base')
@@ -60,7 +60,7 @@ class DensoInterface:
         self.group = moveit_commander.MoveGroupCommander(group_name)
         self.group.set_planning_time(15)
         self.group.set_goal_position_tolerance(0.002)
-        self.group.set_goal_orientation_tolerance(0.05)
+        self.group.set_goal_orientation_tolerance(0.001)
         self.group.set_max_acceleration_scaling_factor = 1.0
         self.group.set_max_velocity_scaling_factor = 1.0
         self.group.set_pose_reference_frame('base_link')

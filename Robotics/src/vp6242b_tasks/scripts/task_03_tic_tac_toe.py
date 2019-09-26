@@ -4,7 +4,7 @@ import tf
 import numpy as np
 from densointerface import DensoInterface
 from geometry_msgs.msg import Quaternion, Point
-from std_msgs.msg import Int8MultiArray, MultiArrayDimension
+from std_msgs.msg import Int8MultiArray, MultiArrayDimension, Float64
 
 #  Definitions
 RATE = 60
@@ -21,6 +21,25 @@ PROCESSED_NEW_BOARD_STATE = True                   # Only process new one if las
 CELL_POSITIONS = np.empty((3, 3), dtype=object)    # Cell positions of form (X, Y) relative to board center
 STARTED = False
 MOVING = False
+X_OFFSET = 0.15
+Z_OFFSET = 0.116
+
+def offset_cb(msg):
+    """
+    Callback to the pen Z offset
+    """
+    global Z_OFFSET, X_OFFSET, CELL_POSITIONS, ROW_HEIGHT, COL_WIDTH, INTERFACE
+    Z_OFFSET = msg.data
+
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
+    
+    # Define cell positions
+    for (i, X) in enumerate([-ROW_HEIGHT, 0, ROW_HEIGHT]):
+        for (j, Y) in enumerate([-COL_WIDTH, 0, COL_WIDTH]):
+            CELL_POSITIONS[i][j] = (X, Y)
+            cell_name = 'cell_{}_{}'.format(i, j)
+            INTERFACE.add_tf_to_scene(cell_name, 'board_marks', tf_position=[X, Y, 0])
 
 def board_state_cb(multiarray_data):
     """
@@ -77,7 +96,7 @@ def draw_X(row, column):
     offset_low = 0.08
     offset_high = 0.10
     # First line
-    symbol_size = 0.015
+    symbol_size = 0.025
     poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_high], orientation) )
     poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_low], orientation) )
     poses.append( ([position[0] + symbol_size , position[1] + symbol_size, position[2] + offset_low], orientation) )
@@ -110,13 +129,17 @@ def command_cb(multiarray_data):
     MOVING = True
     row = multiarray_data.data[0]
     column = multiarray_data.data[1]
+    if (row not in [0, 1, 2] or column not in [0, 1, 2]):
+        print('[ERROR] Command outside allowed interval!')
+        MOVING = False
+        return
     # TODO: Create function draw_O
     # TODO: Check if symbol is X or O and call appropriate function
     draw_X(row, column)
     INTERFACE.move_to_stored_pose('home', wait=True)
 
 def run_node():
-    global RATE, NODE_NAME, OPEN_GRIPPER_JOINT, CLOSE_GRIPPER_JOINT, GRIPPER_IS_CLOSED, PROCESSED_NEW_BOARD_STATE, STARTED, INTERFACE
+    global RATE, NODE_NAME, OPEN_GRIPPER_JOINT, CLOSE_GRIPPER_JOINT, GRIPPER_IS_CLOSED, PROCESSED_NEW_BOARD_STATE, STARTED, INTERFACE, X_OFFSET, Z_OFFSET
     # Init node
     rospy.init_node(NODE_NAME)
     rate = rospy.Rate(RATE)
@@ -124,8 +147,6 @@ def run_node():
     # Robot interface configs
     INTERFACE = DensoInterface(group_name='arm_group', rate=RATE)
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/table.dae', 'table', 'world', mesh_orientation=[0, 0, 0.7071, 0.7071], mesh_color=[1, 0.984, 0.956, 0.796])
-    X_OFFSET = 0.15
-    Z_OFFSET = 0.10
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
     INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14], [ 0, -0.7068252, 0, 0.7073883 ])
@@ -155,6 +176,7 @@ def run_node():
     STARTED = True
     rospy.Subscriber('board_state', Int8MultiArray, board_state_cb)
     rospy.Subscriber('arm_command', Int8MultiArray, command_cb)
+    rospy.Subscriber('pen_offset', Float64, offset_cb)
 
     # TODO: Erase next lines. Only for tests
     # for i in range(3):
