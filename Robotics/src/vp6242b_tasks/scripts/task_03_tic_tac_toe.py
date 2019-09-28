@@ -4,7 +4,7 @@ import tf
 import numpy as np
 from densointerface import DensoInterface
 from geometry_msgs.msg import Quaternion, Point
-from std_msgs.msg import Int8MultiArray, MultiArrayDimension, Float64
+from std_msgs.msg import Int8MultiArray, MultiArrayDimension, Float64MultiArray, Float64
 
 #  Definitions
 RATE = 60
@@ -13,33 +13,40 @@ NODE_NAME = 'board_environment'
 OPEN_GRIPPER_JOINT = 0.0
 CLOSE_GRIPPER_JOINT = 0.65
 GRIPPER_IS_CLOSED = False
-COL_WIDTH = 0.08 + 0.018
-ROW_HEIGHT = 0.08 + 0.018
+COL_WIDTH = 0.06 + 0.005
+ROW_HEIGHT = 0.06 + 0.005
 LAST_BOARD_STATE =  np.empty((3, 3), dtype=object) # -1 is X, 1 is O, 0 is empty
 NEW_BOARD_STATE =  np.empty((3, 3), dtype=object)  # -1 is X, 1 is O, 0 is empty
 PROCESSED_NEW_BOARD_STATE = True                   # Only process new one if last was done processing
 CELL_POSITIONS = np.empty((3, 3), dtype=object)    # Cell positions of form (X, Y) relative to board center
 STARTED = False
 MOVING = False
-X_OFFSET = 0.15
-Z_OFFSET = 0.116
+X_OFFSET = 0.12
+Z_OFFSET = 0.12
+SIDE_OFFSET = 0.12
+SYMBOL_SIZE = 0.015
+
+def size_cb(msg):
+    global SYMBOL_SIZE
+    SYMBOL_SIZE = msg.data
 
 def offset_cb(msg):
     """
     Callback to the pen Z offset
     """
-    global Z_OFFSET, X_OFFSET, CELL_POSITIONS, ROW_HEIGHT, COL_WIDTH, INTERFACE
-    Z_OFFSET = msg.data
+    global Z_OFFSET, X_OFFSET, CELL_POSITIONS, ROW_HEIGHT, COL_WIDTH, INTERFACE, SIDE_OFFSET
+    X_OFFSET = msg.data[0]
+    Z_OFFSET = msg.data[1]
 
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, -SIDE_OFFSET, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, -SIDE_OFFSET, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
     
     # Define cell positions
     for (i, X) in enumerate([-ROW_HEIGHT, 0, ROW_HEIGHT]):
         for (j, Y) in enumerate([-COL_WIDTH, 0, COL_WIDTH]):
-            CELL_POSITIONS[i][j] = (X, Y)
+            CELL_POSITIONS[i][j] = (X, Y + SIDE_OFFSET)
             cell_name = 'cell_{}_{}'.format(i, j)
-            INTERFACE.add_tf_to_scene(cell_name, 'board_marks', tf_position=[X, Y, 0])
+            INTERFACE.add_tf_to_scene(cell_name, 'board_marks', tf_position=[X, Y+SIDE_OFFSET, 0])
 
 def board_state_cb(multiarray_data):
     """
@@ -85,7 +92,7 @@ def draw_X(row, column):
         position : tuple
             Row and column where the X will be drawn.
     """
-    global CELL_POSITIONS, INTERFACE, MOVING
+    global CELL_POSITIONS, INTERFACE, MOVING, SYMBOL_SIZE
     # Define name of cell TF
     cell_name = 'cell_{}_{}'.format(row, column)
     # Get transformation from base_link to cell_name object
@@ -96,16 +103,15 @@ def draw_X(row, column):
     offset_low = 0.08
     offset_high = 0.10
     # First line
-    symbol_size = 0.025
-    poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_high], orientation) )
-    poses.append( ([position[0] - symbol_size , position[1] - symbol_size, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + symbol_size , position[1] + symbol_size, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + symbol_size , position[1] + symbol_size, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - SYMBOL_SIZE , position[1] - SYMBOL_SIZE, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - SYMBOL_SIZE , position[1] - SYMBOL_SIZE, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + SYMBOL_SIZE , position[1] + SYMBOL_SIZE, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + SYMBOL_SIZE , position[1] + SYMBOL_SIZE, position[2] + offset_high], orientation) )
     # Second line
-    poses.append( ([position[0] - symbol_size , position[1] + symbol_size, position[2] + offset_high], orientation) )
-    poses.append( ([position[0] - symbol_size , position[1] + symbol_size, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + symbol_size , position[1] - symbol_size, position[2] + offset_low], orientation) )
-    poses.append( ([position[0] + symbol_size , position[1] - symbol_size, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - SYMBOL_SIZE , position[1] + SYMBOL_SIZE, position[2] + offset_high], orientation) )
+    poses.append( ([position[0] - SYMBOL_SIZE , position[1] + SYMBOL_SIZE, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + SYMBOL_SIZE , position[1] - SYMBOL_SIZE, position[2] + offset_low], orientation) )
+    poses.append( ([position[0] + SYMBOL_SIZE , position[1] - SYMBOL_SIZE, position[2] + offset_high], orientation) )
     # Move to starting point
     starting_position, _ = poses[0]
     INTERFACE.plan_tool_trajectory(tool_frame='tool_center', position=starting_position, orientation=orientation)
@@ -139,7 +145,7 @@ def command_cb(multiarray_data):
     INTERFACE.move_to_stored_pose('home', wait=True)
 
 def run_node():
-    global RATE, NODE_NAME, OPEN_GRIPPER_JOINT, CLOSE_GRIPPER_JOINT, GRIPPER_IS_CLOSED, PROCESSED_NEW_BOARD_STATE, STARTED, INTERFACE, X_OFFSET, Z_OFFSET
+    global RATE, NODE_NAME, OPEN_GRIPPER_JOINT, CLOSE_GRIPPER_JOINT, GRIPPER_IS_CLOSED, PROCESSED_NEW_BOARD_STATE, STARTED, INTERFACE, X_OFFSET, Z_OFFSET, SIDE_OFFSET
     # Init node
     rospy.init_node(NODE_NAME)
     rate = rospy.Rate(RATE)
@@ -147,8 +153,8 @@ def run_node():
     # Robot interface configs
     INTERFACE = DensoInterface(group_name='arm_group', rate=RATE)
     INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/table.dae', 'table', 'world', mesh_orientation=[0, 0, 0.7071, 0.7071], mesh_color=[1, 0.984, 0.956, 0.796])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
-    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, 0, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/white_board.dae', 'white_board', 'base_org', mesh_position=[0.35 + X_OFFSET, -SIDE_OFFSET, 0.02 + Z_OFFSET], mesh_color=[1, 1, 1, 1])
+    INTERFACE.add_mesh_to_scene('vp6242b_description', '/meshes/visual/board_marks.dae', 'board_marks', 'base_org', mesh_position=[0.35 + X_OFFSET, -SIDE_OFFSET, 0.02 + Z_OFFSET], mesh_color=[1, 0, 0, 0])
     INTERFACE.add_tf_to_scene('tool_center', 'simple_gripper_base', [0, 0, 0.14], [ 0, -0.7068252, 0, 0.7073883 ])
     INTERFACE.update()
 
@@ -167,16 +173,17 @@ def run_node():
     # Define cell positions
     for (i, X) in enumerate([-ROW_HEIGHT, 0, ROW_HEIGHT]):
         for (j, Y) in enumerate([-COL_WIDTH, 0, COL_WIDTH]):
-            CELL_POSITIONS[i][j] = (X, Y)
+            CELL_POSITIONS[i][j] = (X , Y+SIDE_OFFSET)
             cell_name = 'cell_{}_{}'.format(i, j)
-            INTERFACE.add_tf_to_scene(cell_name, 'board_marks', tf_position=[X, Y, 0])
+            INTERFACE.add_tf_to_scene(cell_name, 'board_marks', tf_position=[X, Y+SIDE_OFFSET, 0])
 
     # Board state listener
     INTERFACE.update()
     STARTED = True
     rospy.Subscriber('board_state', Int8MultiArray, board_state_cb)
     rospy.Subscriber('arm_command', Int8MultiArray, command_cb)
-    rospy.Subscriber('pen_offset', Float64, offset_cb)
+    rospy.Subscriber('pen_offset', Float64MultiArray, offset_cb)
+    rospy.Subscriber('symbol_size', Float64, size_cb)
 
     # TODO: Erase next lines. Only for tests
     # for i in range(3):
