@@ -5,6 +5,7 @@ import numpy as np
 from densointerface import DensoInterface
 from geometry_msgs.msg import Quaternion, Point
 from std_msgs.msg import Int8MultiArray, MultiArrayDimension, Float64MultiArray, Float64
+import math
 
 #  Definitions
 RATE = 60
@@ -128,7 +129,38 @@ def draw_X(row, column):
 def draw_O(row, column):
     """
     """
-    return None
+    global CELL_POSITIONS, INTERFACE, MOVING, SYMBOL_SIZE
+    # Define name of cell TF
+    cell_name = 'cell_{}_{}'.format(row, column)
+    # Get transformation from base_link to cell_name object
+    position, _ = INTERFACE.get_tf_transform('base_link', frame_reference_name=cell_name)
+    # Create an array of points around cell position with fixed orientation
+    orientation = [0.707, 0, 0, 0.707]
+    poses = []
+    offset_low = 0.08
+    offset_high = 0.10
+    radius = 0.015
+    x = radius * math.cos(0)
+    y = radius * math.sin(0)
+    # First line
+    poses.append( ([position[0] + x , position[1] + y, position[2] + offset_high], orientation) )
+    for theta in range(0, 400, 10):
+        x = radius * math.cos(theta * math.pi / 180)
+        y = radius * math.sin(theta * math.pi / 180)
+        poses.append( ([position[0] + x , position[1] + y, position[2] + offset_low], orientation) )
+
+    # Move to starting point
+    starting_position, _ = poses[0]
+    INTERFACE.plan_tool_trajectory(tool_frame='tool_center', position=starting_position, orientation=orientation)
+    INTERFACE.execute_trajectory(wait=True)
+
+    # Try to plan trajectory    
+    fraction = INTERFACE.plan_multipoint_catesian_tool_trajectory('tool_center', poses)
+    print('[SCRIPT] Completed {} \% of trajectory.'.format(fraction * 100))
+    if (fraction == 1):
+        INTERFACE.execute_trajectory(wait=True)
+        INTERFACE.move_to_stored_pose('home')
+    MOVING = False
 
 def command_cb(multiarray_data):
     """
@@ -146,7 +178,8 @@ def command_cb(multiarray_data):
         return
     # TODO: Create function draw_O
     # TODO: Check if symbol is X or O and call appropriate function
-    draw_X(row, column)
+    # draw_X(row, column)
+    draw_O(row, column)
     INTERFACE.move_to_stored_pose('home', wait=True)
 
 def run_node():

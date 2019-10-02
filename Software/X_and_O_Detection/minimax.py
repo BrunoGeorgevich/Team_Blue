@@ -261,7 +261,7 @@ def main():
     # Main loop of this game
     while len(empty_cells(board)) > 0 and not game_over(board):
         human_turn(c_choice, h_choice)
-        # ai_turn(c_choice, h_choice)
+        ai_turn(c_choice, h_choice)
 
     # Game over message
     if wins(board, HUMAN):

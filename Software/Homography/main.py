@@ -38,7 +38,7 @@ PATH_TO_LABELS = 'labelmap.pbtxt'
 NUM_CLASSES = 2
 
 CLIENT_ID = 'user'
-BROKER_ADDRESS = '10.0.0.101'
+BROKER_ADDRESS = '10.0.0.105'
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 markerLength = 0.09
@@ -395,7 +395,7 @@ detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FPS, 1)
 current_turn = HUMAN
 

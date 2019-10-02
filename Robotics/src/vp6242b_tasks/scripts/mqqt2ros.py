@@ -4,7 +4,7 @@ import rospy
 from std_msgs.msg import Int8MultiArray, MultiArrayDimension, Float64MultiArray, Float64
 import numpy as np
 
-BROKER_ADDRESS = '10.0.0.101'
+BROKER_ADDRESS = '10.0.0.105'
 ROS_NODE_NAME = 'mqqt_ros_bridge'
 
 BOARD_STATE_TOPIC = 'board_state'
