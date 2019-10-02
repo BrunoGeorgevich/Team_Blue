@@ -198,4 +198,4 @@ def ai_turn(c_choice, h_choice, board):
     if set_move(x, y, -1, board):
         board[x][y] = -1
 
-    return board
+    return board,y,x
