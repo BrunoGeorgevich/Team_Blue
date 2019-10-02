@@ -125,6 +125,11 @@ def draw_X(row, column):
         INTERFACE.move_to_stored_pose('home')
     MOVING = False
 
+def draw_O(row, column):
+    """
+    """
+    return None
+
 def command_cb(multiarray_data):
     """
     Callback for command messages.

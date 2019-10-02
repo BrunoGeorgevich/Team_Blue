@@ -1,7 +1,7 @@
 controller_list:
   - name: fake_gripper_group_controller
     type: interpolate
-    rate: 60
+    rate: 30
     joints:
       - simple_gripper_right_driver_joint
   - name: fake_arm_group_controller
