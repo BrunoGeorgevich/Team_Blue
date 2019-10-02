@@ -13,6 +13,8 @@ from time import sleep
 
 from random import randint, random
 
+import paho.mqtt.client as mqtt_client
+
 import tensorflow as tf
 from object_detection.utils import label_map_util
 
@@ -34,6 +36,9 @@ c_choice = 'X'
 PATH_TO_CKPT = 'graph.pb'
 PATH_TO_LABELS = 'labelmap.pbtxt'
 NUM_CLASSES = 2
+
+CLIENT_ID = 'user'
+BROKER_ADDRESS = '10.0.0.101'
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 markerLength = 0.09
@@ -256,7 +261,7 @@ def current_board_state(cells):
         cnts, _ = cv2.findContours(aux, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         cnts = list(map(lambda it: (it, cv2.contourArea(it)), cnts))
-        cnts = list(filter(lambda it: it[1] > 50, cnts))
+        cnts = list(filter(lambda it: it[1] > 250, cnts))
         cnts.sort(key=lambda it: it[1], reverse=True)
 
         if len(cnts) <= 0:
@@ -272,7 +277,7 @@ def current_board_state(cells):
         gray = cv2.merge([bg, bg, bg])
         gray = randomize_image(gray)
 
-        # cv2.imshow(str(k), gray)
+        cv2.imshow(str(k), gray)
 
         prediction = predict(gray)
 
@@ -281,7 +286,7 @@ def current_board_state(cells):
 
         # print(f'{k} -> SCORE {score:.2f} : {class_name}')
 
-        if score < 0.95:
+        if score < 0.98:
             class_name = " "
 
         board = board.replace(f'{k}', class_name)
@@ -331,17 +336,31 @@ def check_victory(board):
         render(board, c_choice, h_choice)
         print('DRAW!')
 
-reference = cv2.imread("assets/reference_board.png")
+def send_mqtt_message(message, topic):
+    global CLIENT_ID, BROKER_ADDRESS
+    client = mqtt_client.Client(CLIENT_ID)
+    client.connect(BROKER_ADDRESS)
+    client.publish(topic, message)
+    client.disconnect()
+
+def send_board_state_message(board):
+    board_str = list(map(lambda it: str(it), board))
+    send_mqtt_message(','.join(board_str), 'board_state')
+
+def send_move_message(y,x):
+    send_mqtt_message(f'{y},{x}', 'move')
+
+reference = cv2.imread("assets/reference_board_2.png")
 
 BOARD_W = reference.shape[1]
 BOARD_H = reference.shape[0]
 
-H = int(BOARD_W*0.12)
-W = int(BOARD_W*0.12)
+H = int(BOARD_H*0.11)
+W = int(BOARD_W*0.11)
 
-CENTERS = [[(int(BOARD_W*0.34),int(BOARD_H*0.28)), (int(BOARD_W*0.5),int(BOARD_H*0.28)), (int(BOARD_W*0.66),int(BOARD_H*0.28))],
-           [(int(BOARD_W*0.34),int(BOARD_H*0.5)) , (int(BOARD_W*0.5),int(BOARD_H*0.5)) , (int(BOARD_W*0.66),int(BOARD_H*0.5)) ],
-           [(int(BOARD_W*0.34),int(BOARD_H*0.72)), (int(BOARD_W*0.5),int(BOARD_H*0.72)), (int(BOARD_W*0.66),int(BOARD_H*0.72))]]
+CENTERS = [[(int(BOARD_W*0.33),int(BOARD_H*0.35)), (int(BOARD_W*0.5),int(BOARD_H*0.35)), (int(BOARD_W*0.65),int(BOARD_H*0.35))],
+           [(int(BOARD_W*0.33),int(BOARD_H*0.52)) , (int(BOARD_W*0.5),int(BOARD_H*0.5)) , (int(BOARD_W*0.65),int(BOARD_H*0.5)) ],
+           [(int(BOARD_W*0.33),int(BOARD_H*0.66)), (int(BOARD_W*0.5),int(BOARD_H*0.66)), (int(BOARD_W*0.65),int(BOARD_H*0.66))]]
 
 reference_aruco, reference_tags = detect_aruco(reference)
 
@@ -376,7 +395,7 @@ detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FPS, 1)
 current_turn = HUMAN
 
@@ -406,13 +425,15 @@ while cv2.waitKey(1) != 27:
 
                 dots, board, distorced_warped, distorced_reverse_warped = get_board_state(distorced_pts)
 
-                cv2.imshow("Reverse Warped", distorced_warped)
+                # cv2.imshow("Reverse Warped", distorced_warped)
+
+                send_board_state_message(board)
 
                 board = np.reshape(board, (3,3))
 
-                print(f"ANALISANDO {equal_times + 1}/4!!")
+                print(f"ANALISANDO {equal_times + 1}/8!!")
 
-                if equal_times < 3:
+                if equal_times < 8  :
                     if (last_frame_board == board).all():
                         equal_times += 1
                     else:
@@ -428,7 +449,8 @@ while cv2.waitKey(1) != 27:
 
                 if current_turn == COMP:
                     print("VEZ DO COMPUTADOR!")
-                    board = ai_turn(c_choice, h_choice, board)
+                    board,y,x = ai_turn(c_choice, h_choice, board)
+                    send_move_message(x,y)
                 elif current_turn == HUMAN:
                     print("VEZ DO HUMANO!")
 
