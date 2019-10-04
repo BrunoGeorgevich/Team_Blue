@@ -17,8 +17,6 @@ MOVE_ROS_TOPIC = 'arm_command'
 MOVE_ROS_PUBLISHER = None
 MOVE_CLIENT_ID = 'move_server'
 
-
-
 def UNUSED(x):
     return x
 
@@ -27,6 +25,7 @@ def on_board_state_changed(client, userdata, message):
     UNUSED(userdata)
     msg = str(message.payload.decode("utf-8"))
     values = np.array(msg.split(','), dtype=np.int8)
+    print('RECEIVED: ', msg)
     assert values.shape == (9,)
     state = Int8MultiArray()
     state.data = list(values)
@@ -38,7 +37,7 @@ def on_move_emitted(client, userdata, message):
     UNUSED(userdata)
     msg = str(message.payload.decode("utf-8"))
     values = np.array(msg.split(','), dtype=np.int8)
-    assert values.shape == (2,)
+    assert values.shape == (3,)
     state = Int8MultiArray()
     state.data = list(values)
     MOVE_ROS_PUBLISHER.publish(state)

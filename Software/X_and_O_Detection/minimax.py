@@ -13,6 +13,8 @@ from random import choice
 import platform
 import time
 from os import system
+import paho.mqtt.client as mqtt_client
+import numpy as np
 
 HUMAN = -1
 COMP = +1
@@ -22,6 +24,32 @@ board = [
     [0, 0, 0],
 ]
 
+CLIENT_ID = 'user'
+BROKER_ADDRESS = '10.0.0.105'
+
+
+
+def send_mqtt_message(message, topic):
+    global CLIENT_ID, BROKER_ADDRESS
+    client = mqtt_client.Client(CLIENT_ID)
+    client.connect(BROKER_ADDRESS)
+    client.publish(topic, message)
+    client.disconnect()
+
+def send_move_message(symbol,y,x):
+    symbol_value = 0
+    if symbol=='X':
+        symbol_value = -1
+    elif symbol=='O':
+        symbol_value = 1
+    send_mqtt_message(f'{symbol_value}, {y},{x}', 'move')
+
+def send_board_state_message(board):
+    values = []
+    for row in board:
+        for el in row:
+            values.append(el * -1)
+    send_mqtt_message(f'{values[0]},{values[1]},{values[2]},{values[3]},{values[4]},{values[5]},{values[6]},{values[7]},{values[8]}', 'board_state')
 
 def evaluate(state):
     """
@@ -177,12 +205,13 @@ def render(state, c_choice, h_choice):
     str_line = '---------------'
 
     print('\n' + str_line)
+    
     for row in state:
         for cell in row:
             symbol = chars[cell]
             print(f'| {symbol} |', end='')
         print('\n' + str_line)
-
+    
 
 def ai_turn(c_choice, h_choice):
     """
@@ -208,6 +237,7 @@ def ai_turn(c_choice, h_choice):
         x, y = move[0], move[1]
 
     set_move(x, y, COMP)
+    send_move_message(c_choice, x, y)
     time.sleep(1)
 
 
@@ -255,13 +285,15 @@ def main():
     Main function that calls all functions
     """
     clean()
-    h_choice = 'X'  # X or O
-    c_choice = 'O'  # X or O
+    h_choice = 'O'  # X or O
+    c_choice = 'X'  # X or O
+    send_mqtt_message(f'{0},{0},{0},{0},{0},{0},{0},{0},{0}', 'board_state')
 
     # Main loop of this game
     while len(empty_cells(board)) > 0 and not game_over(board):
         human_turn(c_choice, h_choice)
         ai_turn(c_choice, h_choice)
+        send_board_state_message(board)
 
     # Game over message
     if wins(board, HUMAN):

@@ -59,8 +59,8 @@ class DensoInterface:
         self.gripper_group.set_planner_id("BFMT")
         self.group = moveit_commander.MoveGroupCommander(group_name)
         self.group.set_planning_time(15)
-        self.group.set_goal_position_tolerance(0.002)
-        self.group.set_goal_orientation_tolerance(0.001)
+        self.group.set_goal_position_tolerance(0.0005)
+        self.group.set_goal_orientation_tolerance(0.0005)
         self.group.set_max_acceleration_scaling_factor = 1.0
         self.group.set_max_velocity_scaling_factor = 1.0
         self.group.set_pose_reference_frame('base_link')

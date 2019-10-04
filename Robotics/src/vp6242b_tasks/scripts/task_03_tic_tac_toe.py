@@ -23,7 +23,7 @@ CELL_POSITIONS = np.empty((3, 3), dtype=object)    # Cell positions of form (X, 
 STARTED = False
 MOVING = False
 X_OFFSET = 0.12
-Z_OFFSET = 0.12
+Z_OFFSET = 0.1225
 SIDE_OFFSET = 0.12
 SYMBOL_SIZE = 0.015
 
@@ -144,7 +144,11 @@ def draw_O(row, column):
     y = radius * math.sin(0)
     # First line
     poses.append( ([position[0] + x , position[1] + y, position[2] + offset_high], orientation) )
-    for theta in range(0, 400, 10):
+    for theta in range(0, 370, 10):
+        x = radius * math.cos(theta * math.pi / 180)
+        y = radius * math.sin(theta * math.pi / 180)
+        poses.append( ([position[0] + x , position[1] + y, position[2] + offset_low], orientation) )
+    for theta in range(0, 370, 10):
         x = radius * math.cos(theta * math.pi / 180)
         y = radius * math.sin(theta * math.pi / 180)
         poses.append( ([position[0] + x , position[1] + y, position[2] + offset_low], orientation) )
@@ -170,8 +174,9 @@ def command_cb(multiarray_data):
     if (MOVING):
         return
     MOVING = True
-    row = multiarray_data.data[0]
-    column = multiarray_data.data[1]
+    row = multiarray_data.data[1]
+    column = multiarray_data.data[2]
+    symbol = multiarray_data.data[0]
     if (row not in [0, 1, 2] or column not in [0, 1, 2]):
         print('[ERROR] Command outside allowed interval!')
         MOVING = False
@@ -179,7 +184,10 @@ def command_cb(multiarray_data):
     # TODO: Create function draw_O
     # TODO: Check if symbol is X or O and call appropriate function
     # draw_X(row, column)
-    draw_O(row, column)
+    if (symbol == -1):
+        draw_X(row, column)
+    elif (symbol == 1):
+        draw_O(row, column)
     INTERFACE.move_to_stored_pose('home', wait=True)
 
 def run_node():
